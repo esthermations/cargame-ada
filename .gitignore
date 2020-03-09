@@ -1,0 +1,13 @@
+*~
+*#
+*.o
+*.ali
+*.exe
+*.jpg
+*.png
+*.mtl
+*.obj
+*.stdout
+*.stderr
+obj/*
+.vscode

@@ -1,0 +1,9 @@
+[submodule "dep/OpenGLAda"]
+	path = dep/OpenGLAda
+	url = https://github.com/flyx/OpenGLAda
+[submodule "dep/ada-traits-containers"]
+	path = dep/ada-traits-containers
+	url = https://github.com/AdaCore/ada-traits-containers
+[submodule "dep/gnatcoll-core"]
+	path = dep/gnatcoll-core
+	url = https://github.com/AdaCore/gnatcoll-core
