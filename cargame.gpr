@@ -12,12 +12,16 @@ project Cargame is
   for Source_Dirs use ("src");
   for Main        use ("cargame-main");
 
+  type OS is ("Linux", "Darwin", "Windows_NT");
+
+  Current_OS : OS := external ("OS", "Darwin");
+
   package Compiler is
     for Default_Switches ("c") use ("-O2", "-s", "-Wp,-w");
   end Compiler;
 
   package Linker is
-    for Default_Switches ("Ada") use ("-Lobj/stb_image_aug.o");
+    for Default_Switches ("Ada") use ("-Lobj");
   end Linker;
 
 end Cargame;
