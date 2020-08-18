@@ -70,7 +70,8 @@ package body Cargame.Types is
    end Look_At;
 
    ----------------------------------------------------------------------------
-   function Look_At (Camera_Position, Target_Position, Up : in Valid_Vector3)
+   function Look_At (Camera_Position, Target_Position : in Position_Type;
+                     Up                               : in Distance_Type)
       return Matrix4
    is
    begin
