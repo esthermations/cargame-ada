@@ -1,5 +1,6 @@
 with Ada.Containers;                use Ada.Containers;
 with Ada.Directories;               use Ada.Directories;
+with Ada.Exceptions;
 with Ada.Characters.Handling;
 with Ada.Unchecked_Conversion;
 
@@ -188,8 +189,6 @@ package body Cargame.Obj_Parser is
                      end if;
                   end loop;
 
-                  --  Util.Log ("Working on " & To_String (UseMtl_Name));
-
                   --  Set Current_Material_Name to the next material
                   for M of Ret.Materials loop
                      if Names_Match (M.Name, UseMtl_Name) then
@@ -231,9 +230,9 @@ package body Cargame.Obj_Parser is
 
    exception
 
-      when others =>
-         Util.Log_Error ("The obj parser failed to parse your obj data.");
-         Util.Log_Error ("See above for error information. Hopefully it got logged.");
+      when E : others =>
+         Util.Log_Error ("Failed to parse obj file: " & File_Path);
+         Util.Log_Warning (Ada.Exceptions.Exception_Message (E));
          raise;
 
    end Parse;
