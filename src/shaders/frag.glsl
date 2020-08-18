@@ -5,6 +5,8 @@ in vec4 t_Modified_Vertex;
 in vec3 t_Modified_Normal;
 in vec2 t_Modified_TexCrd;
 
+out vec4 o_Frag_Colour;
+
 uniform vec3  u_Light_Position;
 uniform vec3  u_Light_Ambient;
 uniform vec3  u_Light_Diffuse;
@@ -66,9 +68,9 @@ void main(void) {
     vec3 Modified_Normal = normalize(t_Modified_Normal);
 
     if (u_Drawing_A_Line) {
-        gl_FragColor = vec4 (1.0, 0.0, 1.0, 1.0); // Purple
+        o_Frag_Colour = vec4 (1.0, 0.0, 1.0, 1.0); // Purple
     } else {
         // Non-procedural stuff, so do light+textures, etc.
-        gl_FragColor = Phong_Point_Light(t_Modified_Vertex, Modified_Normal);
+        o_Frag_Colour = Phong_Point_Light(t_Modified_Vertex, Modified_Normal);
     }
 }
