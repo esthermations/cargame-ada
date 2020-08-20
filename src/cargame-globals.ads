@@ -33,15 +33,13 @@ package Cargame.Globals is
    Seconds_Per_Frame      : constant Single    :=
       (Single (1.0) / Single (Target_FPS));
 
-   Next_Input_Poll_Time   : Time               := Clock;
-   Input_Polls_Per_Second : constant Positive  := (Target_FPS / 2);
-   Input_Poll_Interval    : constant Time_Span :=
-      (Seconds (1) / Input_Polls_Per_Second);
-
-   --  Unit of time, so we can write stuff like
-   --  "Input_Poll_Interval := Frames (5);"
    function Frames (Num : in Natural) return Time_Span is
       (Num * Globals.Frame_Interval);
+   --  Unit of time, so we can write stuff like
+   --  "Input_Poll_Interval := Frames (5);"
+
+   Next_Input_Poll_Time : Time               := Clock;
+   Input_Poll_Interval  : constant Time_Span := Frames (2);
 
    Frame_Number : Natural := 0;
    --  Incremented in the game loop.

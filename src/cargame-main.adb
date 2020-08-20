@@ -45,19 +45,6 @@ procedure Cargame.Main is
 
    Last_Frame_Deadline_Miss : Time := Clock;
 
-   --  subtype Entity is Positive range 1 .. 1000;
-
-   --  package Vecs is new Conts.Vectors.Definite_Bounded
-   --     (Index_Type => Positive, Element_Type => Entity);
-
-   --  subtype Vec is Vecs.Vector;
-
-   --  function Hash (E : in Entity) return Ada.Containers.Hash_Type is
-   --     (Ada.Containers.Hash_Type (E));
-
-   --  package Maps is new Conts.Maps.Def_Def_Unbounded
-   --     (Key_Type => Entity, Element_Type => Boolean, Container_Base_Type => Conts.Limited_Base, Hash => Hash);
-
    Player_Entity : ECS.Entity;
    Planets       : array (1 .. 1) of ECS.Entity;
 
@@ -167,8 +154,8 @@ begin
 
    Log_Task.Start ("Initialising entities.");
 
-   Player.Model := Create_Model_From_Obj ("../src/models/car-n.obj");
-   Planet.Model := Create_Model_From_Obj ("../src/models/Barrel02.obj");
+   Player.Model := Create_Model_From_Obj ("../src/models/cube.obj");
+   Planet.Model := Create_Model_From_Obj ("../src/models/cube.obj");
 
    Player_Entity := ECS.Manager.New_Entity;
    Util.Log ("Player_Entity = " & Player_Entity'Img);
