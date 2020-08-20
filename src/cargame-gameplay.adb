@@ -3,7 +3,6 @@ with GL.Objects.Vertex_Arrays;
 with GL.Objects.Buffers;
 
 with Cargame.Uniforms;
-with Cargame.Util;
 
 package body Cargame.Gameplay is
 
