@@ -1,5 +1,6 @@
 with Ada.Containers;                use Ada.Containers;
 with Ada.Directories;               use Ada.Directories;
+with Ada.Exceptions;
 with Ada.Characters.Handling;
 with Ada.Unchecked_Conversion;
 
@@ -8,36 +9,24 @@ with Cargame.Obj_Parser.Mtl_Parser; use Cargame.Obj_Parser.Mtl_Parser;
 
 with Cargame.Util;                  use Cargame.Util;
 
---  TODO (wtok, 2018-02-28): Aggressively apply semantic
---  compression. Rearrange data. Delete stuff.
-
 package body Cargame.Obj_Parser is
 
    ---------------------------------------------------------------------------
    --  Declarations
 
    type Face is array (Integer range 1 .. 3) of Face_Component;
-   --  TODO: We're explicitly assuming faces are specified as triangles. This 
-   --  isn't actually required by the obj format.
+   --  I'm assuming here that faces will be specified as triangles, i.e. '1/2/3'
+   --  or '1//3' or something. This isn't actually required by the obj format.
 
    ---------------------------------------------------------------------------
    function Get_Face (Split_Line : in XString_Array) return Face
-      with Pre        => Split_Line'Length = 4 and then Split_Line (1) = "f",
+      is separate
+      with Pre        => Split_Line (1) = "f",
            Global     => null,
            Depends    => (Get_Face'Result => Split_Line);
 
    ---------------------------------------------------------------------------
    --  Definitions
-
-   ---------------------------------------------------------------------------
-   function Get_Single (Str : in XString) return Single is
-   begin
-      return Single'Value (Str.To_String);
-   end Get_Single;
-
-   ---------------------------------------------------------------------------
-   function Get_Face (Split_Line : in XString_Array) return Face
-      is separate;
 
    ---------------------------------------------------------------------------
    procedure Next_Significant_Line (File : in File_Type; Line : out XString)
@@ -56,10 +45,10 @@ package body Cargame.Obj_Parser is
             end if;
          end loop;
 
-         Line_Is_Significant := Line.Length > 0 and then 
-                                Line (1) /= '#' and then
-                                not (for all C of Line => 
-                                        Is_Space (C) or else Is_Control (C));
+         Line_Is_Significant := 
+            Line.Length > 0 and
+            Line (1) /= '#' and
+            not (for all C of Line => Is_Space (C) or Is_Control (C));
 
          if Line_Is_Significant then
             return;
@@ -80,10 +69,9 @@ package body Cargame.Obj_Parser is
 
       Ret : Obj_Data; --  Return value
 
-      --  Data from the file. We reduplicate these unique verts, normals and
-      --  texcoords as specified by the faces. Just keeping the data in the
-      --  simplest possible form so we don't have to deal with index nonsense
-      --  if we don't want to.
+      --  Unique vertices as specified in the obj file, irrespective of faces.
+      --  When we handle the faces, we just copy the values given by the indices
+      --  in the face from this array into the output data.
       Unique_Vertices : Vector_Of_Vector3;
       Unique_Normals  : Vector_Of_Vector3;
       Unique_TexCrds  : Vector_Of_Vector2;
@@ -188,8 +176,6 @@ package body Cargame.Obj_Parser is
                      end if;
                   end loop;
 
-                  --  Util.Log ("Working on " & To_String (UseMtl_Name));
-
                   --  Set Current_Material_Name to the next material
                   for M of Ret.Materials loop
                      if Names_Match (M.Name, UseMtl_Name) then
@@ -231,9 +217,9 @@ package body Cargame.Obj_Parser is
 
    exception
 
-      when others =>
-         Util.Log_Error ("The obj parser failed to parse your obj data.");
-         Util.Log_Error ("See above for error information. Hopefully it got logged.");
+      when E : others =>
+         Util.Log_Error ("Failed to parse obj file: " & File_Path);
+         Util.Log_Warning (Ada.Exceptions.Exception_Message (E));
          raise;
 
    end Parse;

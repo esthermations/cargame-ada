@@ -7,30 +7,34 @@ objects                  = $(wildcard obj/*.ali) $(wildcard obj/*.o)
 
 gpr_options              = -XAuto_Exceptions=enabled
 
-gprbuild_options         = -gnatW8 -j15 -gnatwa -gnat2020 # -gnatm5
+gprbuild_options         = -p -gnat2020 -gnatW8 -j15 -gnatwa # -gnatm5
 gprbuild_debug_options   = -O0 -g # -gnata
 gprbuild_release_options = -O2 -s
 # gprbuild_lint_options    = -O0 -gnatc
 
-uname=$(uname)
 
-GNATPROVE = /c/GNAT/2018/bin/gnatprove.exe
+# GNATPROVE = /c/GNAT/2018/bin/gnatprove.exe
 
-ifeq ($(OS),Windows_NT)
-	gpr_options += -XWindowing_System=windows
-else
-	gpr_options += -XWindowing_System=x11
+WINDOWING_SYSTEM := windows
+UNAME := $(shell uname)
+
+ifeq ($(UNAME), Darwin)
+	WINDOWING_SYSTEM := quartz
+endif
+ifeq ($(UNAME), Linux)
+	WINDOWING_SYSTEM := x11
 endif
 
+gpr_options += -XWindowing_System=${WINDOWING_SYSTEM}
+
 all: $(sources)
-	mkdir -p bin obj
-	gprbuild  -P $(project_file) $(gpr_options) $(gprbuild_options) $(gprbuild_debug_options)
+	gprbuild -P $(project_file) $(gpr_options) $(gprbuild_options) $(gprbuild_debug_options)
 
 release: $(sources)
-	gprbuild  -P $(project_file) $(gpr_options) $(gprbuild_options) $(gprbuild_release_options)
+	gprbuild -P $(project_file) $(gpr_options) $(gprbuild_options) $(gprbuild_release_options)
 
 clean: $(objects)
-	gprclean  -P $(project_file) $(gpr_options)
+	gprclean -P $(project_file) $(gpr_options)
 
 prove: $(sources)
 	$(GNATPROVE) -P $(project_file) $(gpr_options)

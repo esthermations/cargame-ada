@@ -14,7 +14,7 @@ function Get_Face (Split_Line : in XString_Array) return Face is
 
    function To_Face_Component (Str : XString) return Face_Component is
       FC      : Face_Component;
-      Split   : XString_Array (1 .. 3); -- Triangles only.
+      Split   : XString_Array (1 .. 3);
       Unused  : Natural;
    begin
 
@@ -23,30 +23,31 @@ function Get_Face (Split_Line : in XString_Array) return Face is
                  Into => Split, 
                  Last => Unused);
 
-      FC.V := GL.Types.Size'Value (To_String (Split (1)));
-      FC.T := GL.Types.Size'Value (To_String (Split (2)));
-      FC.N := GL.Types.Size'Value (To_String (Split (3)));
+      FC.V := GL.Types.Size'Value (Split (1).To_String);
+      FC.T := GL.Types.Size'Value (Split (2).To_String);
+      FC.N := GL.Types.Size'Value (Split (3).To_String);
 
-      pragma Assert (FC.V /= 0 and FC.N /= 0 and FC.T /= 0,
-                     "A face line gave a 0 index."
-                        & " Obj indices start at 1. What does 0 mean?");
+      --  Configm that the obj file complies to spec...
+      if 0 in FC.V | FC.N | FC.T then
+         raise Invalid_Obj_File 
+            with "Obj file gave a zero index on a face, which is out of spec.";
+      end if;
 
-      --  Obj indices start at 1, but our indices start at 0.
-      --  XXX: If there's gonna be an off-by-one error, this will cause it.
-
-      FC.V := FC.V - 1;
-      FC.N := FC.N - 1;
-      FC.T := FC.T - 1;
+      --  Subtract 1 to convert to our zero-based indexing
+      FC.V := @ - 1;
+      FC.T := @ - 1;
+      FC.N := @ - 1;
 
       return FC;
 
    exception
 
-      when Constraint_Error =>
+      when E : Constraint_Error =>
          Util.Log_Error ("Was unable to convert this string to a face:");
-         Util.Log_Warning (""" & Str.To_String & """);
+         Util.Log_Warning ("'" & Str.To_String & "'");
          Util.Log ("Note that we only support triangles with V/T/N format.");
-         Util.Log_Error ("Crashing.");
+         Util.Log ("Further exception info provided below:");
+         Util.Log (Ada.Exceptions.Exception_Message (E));
          raise;
 
    end To_Face_Component;
@@ -54,18 +55,16 @@ function Get_Face (Split_Line : in XString_Array) return Face is
    ----------------------------------------------------------------------------
    --  Variables
 
-   Ret : Face := (others => Face_Component'(V => Unset_Index,
-                                            T => Unset_Index,
-                                            N => Unset_Index));
+   Ret : Face := (others => Face_Component'(others => Unset_Index));
 
 begin
 
-   pragma Assert (Split_Line'Length = 4, 
-                  -- Something like ("f" "1/2/3" "1/2/3" "1/2/3")
-                  "Mtl file has faces that aren't triangles."
-                     & " We can't handle those yet.");
+   if Split_Line'Length /= 4 then
+      raise Cargame.Unimplemented_Feature with
+         "Obj file has faces that aren't triangles. We can't handle those yet.";
+   end if;
 
-   for I in (Split_Line'First + 1) .. Split_Line'Last loop
+   for I in Split_Line'First + 1 .. Split_Line'Last loop
       Ret (I - 1) := To_Face_Component (Split_Line (I));
    end loop;
 

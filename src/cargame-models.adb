@@ -93,11 +93,12 @@ package body Cargame.Models is
                            Data   => Vertices,
                            Usage  => Static_Draw);
 
-      Set_Vertex_Attrib_Pointer (Index  => Vertices_Attribute,
-                                 Count  => Vector3'Length,
-                                 Kind   => Single_Type,
-                                 Stride => 0,
-                                 Offset => 0);
+      Set_Vertex_Attrib_Pointer (Index      => Vertices_Attribute,
+                                 Count      => Vector3'Length,
+                                 Kind       => Single_Type,
+                                 Normalized => False,
+                                 Stride     => 0,
+                                 Offset     => 0);
 
       Enable_Vertex_Attrib_Array (Vertices_Attribute);
 
@@ -113,11 +114,12 @@ package body Cargame.Models is
                            Data   => Normals,
                            Usage  => Static_Draw);
 
-      Set_Vertex_Attrib_Pointer (Index  => Normals_Attribute,
-                                 Count  => Vector3'Length,
-                                 Kind   => Single_Type,
-                                 Stride => 0,
-                                 Offset => 0);
+      Set_Vertex_Attrib_Pointer (Index      => Normals_Attribute,
+                                 Count      => Vector3'Length,
+                                 Kind       => Single_Type,
+                                 Normalized => False,
+                                 Stride     => 0,
+                                 Offset     => 0);
 
       Enable_Vertex_Attrib_Array (Normals_Attribute);
 
@@ -134,11 +136,12 @@ package body Cargame.Models is
                            Data   => TexCrds,
                            Usage  => Static_Draw);
 
-      Set_Vertex_Attrib_Pointer (Index  => TexCrds_Attribute,
-                                 Count  => Vector2'Length,
-                                 Kind   => Single_Type,
-                                 Stride => 0,
-                                 Offset => 0);
+      Set_Vertex_Attrib_Pointer (Index      => TexCrds_Attribute,
+                                 Count      => Vector2'Length,
+                                 Kind       => Single_Type,
+                                 Normalized => False,
+                                 Stride     => 0,
+                                 Offset     => 0);
       Enable_Vertex_Attrib_Array (TexCrds_Attribute);
 
       ------------------------
@@ -464,11 +467,12 @@ package body Cargame.Models is
                            Data   => Data,
                            Usage  => Static_Draw);
 
-      Set_Vertex_Attrib_Pointer (Index  => Vertices_Attribute,
-                                 Count  => Vector3'Length,
-                                 Kind   => Single_Type,
-                                 Stride => 0,
-                                 Offset => 0);
+      Set_Vertex_Attrib_Pointer (Index      => Vertices_Attribute,
+                                 Count      => Vector3'Length,
+                                 Kind       => Single_Type,
+                                 Normalized => False,
+                                 Stride     => 0,
+                                 Offset     => 0);
 
       Enable_Vertex_Attrib_Array (Vertices_Attribute);
 
