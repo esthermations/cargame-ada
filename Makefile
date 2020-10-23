@@ -7,7 +7,7 @@ objects                  = $(wildcard obj/*.ali) $(wildcard obj/*.o)
 
 gpr_options              = -XAuto_Exceptions=enabled
 
-gprbuild_options         = -gnatW8 -j15 -gnatwa # -gnatm5
+gprbuild_options         = -gnatW8 -j15 -gnatwa -gnat2020 # -gnatm5
 gprbuild_debug_options   = -O0 -g # -gnata
 gprbuild_release_options = -O2 -s
 # gprbuild_lint_options    = -O0 -gnatc

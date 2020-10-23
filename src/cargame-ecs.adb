@@ -58,12 +58,14 @@ package body Cargame.ECS is
       --  Get  --
       -----------
 
+      --  This is where the separation between Component_Kind and Component is
+      --  resolved - we rely on Query to return only Entities for which this Get
+      --  function will NOT hit an exception.
       function Get (E : in Entity) return Component_Data is 
       begin
-         Util.Log ("Entity " & E'Img & " -> comp " & Kind'Img);
          return Map.Get (E);
       exception
-         when others => 
+         when others =>
             Util.Log_Error ("Expected Entity " & E'Img & " to have Component " & Kind'Img & ", but it isn't set!");
             raise;
       end Get;
@@ -74,7 +76,6 @@ package body Cargame.ECS is
      
       procedure Set (E : in Entity; Comp : in Component_Data) is
       begin
-         Util.Log ("Entity " & E'Img & " <- comp " & Kind'Img);
          Map.Set (E, Comp);
       end Set;
 
@@ -272,7 +273,7 @@ package body Cargame.ECS is
                Sys : System renames Systems (I);
             begin
                if Sys.Last_Run = Never or else 
-                  Sys.Last_Run + Sys.Interval >= Now 
+                  Sys.Last_Run + Sys.Interval <= Now 
                then
                   --  Run the thing
 
@@ -283,22 +284,12 @@ package body Cargame.ECS is
                      Systems.Replace_Element (I, New_Val);
                   end;
 
-                  Util.Log ("Running system " & 
-                              System_Names.To_String (Sys.Name));
-
                   Ents := Manager.Query (Sys.Comps);
 
-                  Util.Log
-                     ("Query yielded " & Entity_Sets.Length(Ents)'Img 
-                                          & " entities.");
-
                   for E of Ents loop
-                     Util.Log (System_Names.To_String (Sys.Name) & "(" & E'Img & ")");
                      Sys.Proc.all (E);
                   end loop;
-
-                  Util.Got_Here ("After looping over ents.");
-               end if;
+              end if;
             end;
          end loop;
       end Run_Systems;

@@ -7,39 +7,6 @@ with Cargame.Util;
 
 package body Cargame.Gameplay is
 
-   --  procedure Register_Systems is
-   --     use Cargame.ECS;
-   --     use Cargame.ECS.Components;
-   --  begin
-
-   --     Register_System ((Proc       => Tick_Position'Access, 
-   --                       Run_Every  => Frames (1), 
-   --                       Components => Position & Velocity));
-
-   --     Register_System ((Proc       => Tick_Rotation'Access, 
-   --                       Run_Every  => Frames (1), 
-   --                       Components => Rotation & Rotational_Speed));
-
-   --     --  TODO: More ambitious conversions below.
-
-   --     --  Register_System (Render'Access,
-   --     --                   Run_Every  => Frames (1), 
-   --     --                   Components => Position & 
-   --     --                                 Rotation & 
-   --     --                                 Scale &
-   --     --                                 Vertex_Array & 
-   --     --                                 Vertex_Buffer & 
-   --     --                                 Element_Buffer &
-   --     --                                 Ambient_Light & 
-   --     --                                 Diffuse_Light & 
-   --     --                                 Specular_Light);
-
-   --     --  Register_System (Grab_Input'Access,
-   --     --                   Run_Every  => Frames (2), 
-   --     --                   Components => Keyboard & Mouse);
-
-   --  end Register_Systems;
-
    package body Systems is
       use ECS;
 
@@ -54,6 +21,47 @@ package body Cargame.Gameplay is
          Pos := Pos + Vel;
          Components.Position.Set (E, Pos);
       end Tick_Position;
+
+      ---------------------
+      --  Tick_Velocity  --
+      ---------------------
+
+      procedure Tick_Velocity (E : in Entity) is
+         Vel :          Velocity_Type     := Components.Velocity.Get (E);
+         Acc : constant Acceleration_Type := Components.Acceleration.Get (E);
+      begin
+         Vel := Vel + Acc;
+         Util.Log ("Setting Velocity to " & Image (Vel));
+         Components.Velocity.Set (E, Vel);
+      end Tick_Velocity;
+
+      ---------------------------
+      --  Tick_Player_Actions  --
+      ---------------------------
+
+      procedure Tick_Player_Actions (E : in Entity) is
+         use Gameplay.Controls;
+         Acc : Acceleration_Type := (0.0, 0.0, 0.0);
+         Requested : Player_Action_Boolean_Array 
+            renames Player_Is_Requesting_Action;
+
+         Amount : Single renames Gameplay.Player_Acceleration_Tick;
+      begin
+         for Action in Controls.Player_Action loop
+            if Requested (Action) then
+               case Action is
+                  when Accelerate   => Acc := @ + (0.0, 0.0, +Amount);
+                  when Decelerate   => Acc := @ + (0.0, 0.0, -Amount);
+                  when Strafe_Left  => Acc := @ + (+Amount, 0.0, 0.0);
+                  when Strafe_Right => Acc := @ + (-Amount, 0.0, 0.0);
+                  when Strafe_Up    => Acc := @ + (0.0, +Amount, 0.0);
+                  when Strafe_Down  => Acc := @ + (0.0, -Amount, 0.0);
+                  when others => null;
+               end case;
+            end if;
+         end loop;
+         Components.Acceleration.Set (E, Acc);
+      end Tick_Player_Actions;
 
       ---------------------
       --  Tick_Rotation  --
@@ -106,160 +114,6 @@ package body Cargame.Gameplay is
       end Tick_Normal_Matrix;
 
    end Systems;
-
-   --  procedure Render (E : in Entity) is
-   --     use Cargame.ECS.Components;
-   --     Vao : Vertex_Array_Object := Vertex_Array.Get (E);
-   --     Vtx_Buf : Vertex_Buffer   := Vertex_Buffer.Get (E);
-   --     Elm_Buf : Element_Buffer  := Element_Buffer.Get (E);
-
-   --     Pos : Position_Type := Position.Get (E);
-   --     Rot : Radians       := Rotation.Get (E);
-   --     Scale : Single      := Render_Scale.Get (E);
-
-   --     Amb_Light : Vector3 := Ambient_Light.Get (E);
-   --     Dif_Light : Vector3;
-   --     Spe_Light : Vector3;
-
-   --     Elm_Range : Element_Range := Element_Range.Get (E);
-
-   --     use GL.Objects.Textures;
-   --     use GL.Objects.Textures.Targets;
-   --  begin
-
-   --     Send_Updated_Uniforms (Object_Position => Pos,
-   --                            Object_Rotation => Rot,
-   --                            Object_Scale    => Scale);
-
-   --     Bind (Vao);
-   --     Bind (Array_Buffer, Vtx_Buf);
-   --     Bind (Element_Array_Buffer, Elm_Buf);
-
-   --     Uniforms.Material_Shininess.Set (Shininess);
-   --     Uniforms.Material_Ambient.Set (Ambient_Light);
-
-   --     --  FIXME: These should probably be their own systems, right?
-
-   --     if ECS.Components.Diffuse_Texture.Has (E) then
-   --        Uniforms.Material_Diffuse.Set (Globals.Diffuse_Map_ID);
-   --        Set_Active_Unit (Globals.Diffuse_Map_ID);
-   --        Texture_2D.Bind (Components.Diffuse_Light.Get (E));
-   --     end if;
-
-   --     if ECS.Components.Specular_Texture.Has (E) then
-   --        Uniforms.Material_Specular.Set (Globals.Specular_Map_ID);
-   --        Set_Active_Unit (Globals.Specular_Map_ID);
-   --        Texture_2D.Bind (Components.Specular_Texture.Get (E));
-   --     end if;
-
-   --     Draw_Elements (Mode           => Triangles,
-   --                    Index_Type     => UInt_Type,
-   --                    Element_Offset => Elm_Range.First,
-   --                    Count          => (Elm_Range.Last - Elm_Range.First));
-
-   --     --  Unbind_VAO; --  Uncomment if borked.
-   --     
-   --  end Render;
-
-   ------------------------
-   --  Throttle_Control  --
-   ------------------------
-
-   procedure Tick (T : in out Throttle_Control) is
-   begin
-      T.Value := (if T.Is_Active 
-                  then Single'Min (Throttle_Amount'Last,  T.Value + T.Step)
-                  else Single'Max (Throttle_Amount'First, T.Value - T.Step));
-   end Tick;
-
-   --------------
-   --  Player  --
-   --------------
-
-   package body Player is
-
-      ------------
-      --  Tick  --
-      ------------
-
-      procedure Tick is
-         use Gameplay.Controls;
-      begin
-
-         ----------------------
-         --  Tick throttles  --
-         ----------------------
-
-         for T of Throttle loop
-            T.Tick;
-         end loop;
-
-         ---------------------
-         --  Tick Velocity  --
-         ---------------------
-
-         declare
-            --  Mouse_Pos : constant Vector2 := 
-            --     Globals.Mouse.Normalised_Position_From_Centre;
-
-            X_Speed : constant Single := 
-               (Throttle (Strafe_Left).Value - Throttle (Strafe_Right).Value);
-            Y_Speed : constant Single := 
-               (Throttle (Strafe_Up).Value - Throttle (Strafe_Down).Value);
-            Z_Speed : constant Single := 
-               (Throttle (Accelerate).Value - Throttle (Decelerate).Value);
-         begin
-            --  TODO : Make throttle up and down push you on a vector depending
-            --  on your current rotation.
-            --
-            --  i.e., Forwards throttle should behave differently in that it
-            --  just increases your speed towards your mouse cursor.
-
-            Velocity (X) := Velocity (X) + X_Speed;
-            Velocity (Y) := Velocity (Y) + Y_Speed;
-            Velocity (Z) := Velocity (Z) + Z_Speed;
-
-            --  TODO: Normalise velocity in a reasonable way
-            Velocity := Velocity / 10.0;
-         end;
-
-         ---------------------
-         --  Tick Position  --
-         ---------------------
-
-         Position := Position + Velocity;
-
-         for I in Position'Range loop
-            Position (I) := Position (I) + Velocity (I);
-         end loop;
-
-         ---------------------
-         --  Tick Rotation --
-         ---------------------
-
-         Rotational_Velocity := 
-            Rotational_Velocity + 
-            0.001 * (Radians (Throttle (Yaw_Right).Value) - 
-                     Radians (Throttle (Yaw_Left).Value));
-
-         Rotation := Rotation + Rotational_Velocity;
-
-      end Tick;
-
-   end Player;
-
-   --------------
-   --  Planet  --
-   --------------
-
-   package body Planet is
-
-      procedure Tick is
-      begin
-         Rotation := Rotation + Rotational_Velocity;
-      end Tick;
-
-   end Planet;
 
    ----------------
    --  Controls  --

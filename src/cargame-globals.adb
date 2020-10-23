@@ -40,17 +40,13 @@ package body Cargame.Globals is
          Key_Action  : Glfw.Input.Keys.Action renames Action;
       begin
          if Game_Action in Player_Action then
-
-            Gameplay.Player.Throttle (Game_Action).Is_Active := 
-               (Key_Action in Press | Repeat);
-
+            Gameplay.Controls.Player_Is_Requesting_Action (Game_Action) := 
+               (if Key_Action in Press | Repeat then True else False);
          else 
-
             case Game_Action is
                when Quit => Globals.Window.Object.Set_Should_Close (True);
                when others => null;
             end case;
-
          end if;
       end Key_Changed;
 

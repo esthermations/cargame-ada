@@ -4,7 +4,6 @@ with Ada.Real_Time; use Ada.Real_Time;
 with Conts.Maps.Def_Def_Unbounded;
 with Conts.Functional.Sets;
 
-
 package Cargame.ECS is
 
    --------------
@@ -27,25 +26,17 @@ package Cargame.ECS is
    --  Component  --
    -----------------
 
-   --  In order for this ECS library to be generic, this should be a generic
-   --  parameter so that the user specifies their list of components, and a
-   --  Generic_Component_Store is instantiated for each Component_Kind.
-   --
-   --  Current idea is for the Manager keep a Component_Kind -> Entity_Set 
-   --  mapping, which the individual component stores update when Set is called.
-   --  I suppose a System should be a generic procedure, with an execution 
-   --  kernel and a set of Enabled_Components.
-   --
-   --  The execution kernel is technically free to grab components from whatever
-   --  stores it wants. I'll look into how to enforce discipline there, but for 
-   --  the meantime it's "be careful".
-
    type Component_Kind is 
       (
+
+       --  Gameplay-related
+       Player,
+
        --  Physics-related
 
        Position, 
        Velocity, 
+       Acceleration,
        Rotation,
        Rotational_Speed,
        --Hitbox,
@@ -86,20 +77,6 @@ package Cargame.ECS is
 
    function "+" (C1 : in Component_Kind) return Enabled_Components;
    --  Unary plus. Allows us to write '+Position' to mean "Enable position".
-
-   --  `Enable` is an alternative, in case that doesn't work out. It allows you
-   --  to write Enable ((C1, C5, C17)) to provide a list of components.
-
-   -- function Enable (Comps : in array (Component_Kind'Range) of Component_Kind) return Enabled_Components
-   -- is
-   --    Ret : Enabled_Components := (others => False);
-   -- begin
-   --    return Ret : Enabled_Components := (others => False) do
-   --       for C of Comps loop
-   --          Ret (C) := True;
-   --       end loop;
-   --    end return;
-   -- end Enable;
 
    generic
       type Component_Data is private;
@@ -147,25 +124,9 @@ package Cargame.ECS is
    --  System  --
    --------------
 
-   --  Systems are the main problem as far as implementation in Ada goes. It
-   --  might be most appropriate to have it just be an interface. But what do we
-   --  gain there?
-   --
-   --  I guess any idea for a System implementation has to improve on just
-   --  having a bunch of procedures. Let's try that.
-
    type System_Proc is access procedure (E : in Entity);
    --  There's no type safety here. You can give the Manager any old procedure
    --  and it'll run it. But you shouldn't.
-
-   -- type System_Trigger is (Regular_Interval, After_Another_System);
-
-   -- type System_Run_Timing (Trigger : in System_Trigger) is record
-   --    case Trigger is
-   --       when Regular_Interval     => Run_Every : Time_Span;
-   --       when After_Another_System => Run_After : System_Proc;
-   --    end case;
-   -- end record;
 
    ---------------
    --  Manager  --

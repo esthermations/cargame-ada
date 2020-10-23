@@ -61,7 +61,7 @@ package Cargame.Globals is
    Near_Plane        : constant                     := 1.0;
    Far_Plane         : constant                     := 200.0;
 
-   Camera_Position   : Vector3                      := (0.0, 2.0, -2.0);
+   Camera_Position   : Vector3                      := (0.0, 1.0, -1.0);
 
    Diffuse_Map_ID    : constant Int := 0;
    Specular_Map_ID   : constant Int := 1;
