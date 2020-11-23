@@ -7,3 +7,6 @@
 [submodule "dep/gnatcoll-core"]
 	path = dep/gnatcoll-core
 	url = https://github.com/AdaCore/gnatcoll-core
+[submodule "dep/stb"]
+	path = dep/stb
+	url = https://github.com/nothings/stb
