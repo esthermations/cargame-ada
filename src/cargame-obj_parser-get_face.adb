@@ -28,7 +28,7 @@ function Get_Face (Split_Line : in XString_Array) return Face is
       FC.N := GL.Types.Size'Value (Split (3).To_String);
 
       --  Configm that the obj file complies to spec...
-      if 0 in FC.V | FC.N | FC.T then
+      if GL.Types.Size (0) in FC.V | FC.N | FC.T then
          raise Invalid_Obj_File 
             with "Obj file gave a zero index on a face, which is out of spec.";
       end if;

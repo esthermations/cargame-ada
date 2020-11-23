@@ -5,7 +5,6 @@ with GL.Objects.Buffers;
 
 with Cargame.Types;
 with Cargame.Vectors;
-with Cargame.ECS;
 
 package Cargame.Models is
 
@@ -21,32 +20,16 @@ package Cargame.Models is
    Normals_Attribute  : constant Attribute := 1;
    TexCrds_Attribute  : constant Attribute := 2;
 
-   procedure Send_Updated_Uniforms (Object_Position : in Position_Type;
-                                    Object_Scale    : in Single := 1.0;
-                                    Object_Rotation : in Radians := 0.0);
-
    type Model is tagged record
       Materials     : Vector_Of_Material;
       Vao           : Vertex_Array_Object := Null_Array_Object;
-      Dimensions    : Volume3D_Type       := (others => 0.0);
-      Vertex_Buffer : Buffer;
-      Normal_Buffer : Buffer;
-      TexCrd_Buffer : Buffer;
-      Index_Buffer  : Buffer;
-      Num_Indices   : Int := 0;
+      Vertex_Buffer : GL.Objects.Buffers.Buffer;
+      Normal_Buffer : GL.Objects.Buffers.Buffer;
+      TexCrd_Buffer : GL.Objects.Buffers.Buffer;
+      Index_Buffer  : GL.Objects.Buffers.Buffer;
    end record;
 
-   procedure Render (M : in Model;
-                     E : in ECS.Entity);
-
-   function "=" (L, R : in Model) return Boolean is
-        ((L.Vao           = R.Vao)           and then
-         --  (L.Materials     = R.Materials)     and then
-         (L.Vertex_Buffer = R.Vertex_Buffer) and then
-         (L.Normal_Buffer = R.Normal_Buffer) and then
-         (L.TexCrd_Buffer = R.TexCrd_Buffer) and then
-         (L.Index_Buffer  = R.Index_Buffer)  and then
-         (L.Num_Indices   = R.Num_Indices));
+   function "=" (L, R : in Model) return Boolean is (L.Vao = R.Vao);
 
    function Is_Renderable (M : in Model) return Boolean;
 
@@ -76,11 +59,5 @@ package Cargame.Models is
 
    function Create_Model_From_Obj (Obj_File_Path : in String) return Model
       with Post => Is_Renderable (Create_Model_From_Obj'Result);
-
-
-   procedure Draw_A_Line (From, To : in Position_Type;
-                          Vao : in Vertex_Array_Object;
-                          Vbo : in Buffer) 
-      with Pre => Vao.Initialized and Vbo.Initialized;
 
 end Cargame.Models;

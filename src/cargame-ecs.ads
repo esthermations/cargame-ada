@@ -4,6 +4,8 @@ with Ada.Real_Time; use Ada.Real_Time;
 with Conts.Maps.Def_Def_Unbounded;
 with Conts.Functional.Sets;
 
+with Cargame.Globals;
+
 package Cargame.ECS is
 
    --------------
@@ -43,6 +45,7 @@ package Cargame.ECS is
 
        --  Render-related 
 
+       Model,
        Render_Scale,
        Object_Matrix,
        CamObj_Matrix,
@@ -50,13 +53,6 @@ package Cargame.ECS is
        --Ambient_Light,
        --Diffuse_Light,
        --Specular_Light,
-       --Material_Name,
-       --Element_Range,
-       --Shininess,
-       --Specular_Texture,
-       --Diffuse_Texture,
-       --Vertex_Array,
-       --Vertex_Buffer
        );
 
    type Enabled_Components is array (Component_Kind) of Boolean;
@@ -77,48 +73,6 @@ package Cargame.ECS is
 
    function "+" (C1 : in Component_Kind) return Enabled_Components;
    --  Unary plus. Allows us to write '+Position' to mean "Enable position".
-
-   generic
-      type Component_Data is private;
-      Kind : Component_Kind;
-   package Generic_Component_Store is
-
-      pragma Assertion_Policy (Pre => Check, Post => Check);
-
-      function Query return Entity_Set;
-
-      function Has (E : in Entity) return Boolean;
-
-      function Is_Set (E : in Entity) return Boolean 
-         with Pre => Has (E);
-
-      function Get (E : in Entity) return Component_Data
-         with Pre => Has (E) and then
-                     Is_Set (E);
-
-      procedure Set (E : in Entity; Comp : in Component_Data)
-         with Post => Has (E);
-
-   private
-
-      package Maps is new Conts.Maps.Def_Def_Unbounded
-         (Key_Type            => Entity, 
-          Element_Type        => Component_Data, 
-          Hash                => Hash, 
-          Container_Base_Type => Conts.Limited_Base);
-
-      Map : Maps.Map;
-
-   end Generic_Component_Store;
-
-   --  Systems query for entities associated with a set of components.
-
-   --  The problem we're bound to run into here is that "Component_Kind" and the
-   --  actual type of the component data will always be separate, and Ada 
-   --  generics (let alone runtime) provides no way to generate code to get one 
-   --  from the other. So I'll have to manually implement *some* sort of 
-   --  Component_Kind -> component mapping, and I should pick where I do that to
-   --  minimise the work needed to add new components.
 
    --------------
    --  System  --
@@ -157,12 +111,61 @@ package Cargame.ECS is
       procedure Register_System (Name         : in String;
                                  Proc         : in not null System_Proc;
                                  Components   : in Enabled_Components;
-                                 Run_Interval : in Time_Span)
+                                 Run_Interval : in Globals.Frames)
          with Pre => Name'Length <= 50 and then
                      Components /= No_Components;
 
       procedure Run_Systems;
 
    end Manager;
+
+   ------------------------
+   --  Component Stores  --
+   ------------------------
+
+   generic
+      type Component_Data is private;
+      Kind : Component_Kind;
+   package Generic_Component_Store is
+
+      pragma Assertion_Policy (Pre => Check, Post => Check);
+
+      function Query return Entity_Set;
+
+      function Has (E : in Entity) return Boolean;
+
+      function Is_Set (E : in Entity) return Boolean 
+         with Pre => Has (E);
+
+      function Get (E : in Entity) return Component_Data
+         with Pre => Has (E) and then
+                     Is_Set (E);
+
+      procedure Set (E : in Entity; Comp : in Component_Data)
+         with Pre  => Manager.Has_Component (E, Kind),
+              Post => Has (E);
+
+   private
+
+      package Maps is new Conts.Maps.Def_Def_Unbounded
+         (Key_Type            => Entity, 
+          Element_Type        => Component_Data, 
+          Hash                => Hash, 
+          Container_Base_Type => Conts.Limited_Base);
+
+      Map : Maps.Map;
+
+   end Generic_Component_Store;
+
+   --  Systems query for entities associated with a set of components.
+
+   --  The problem we're bound to run into here is that "Component_Kind" and the
+   --  actual type of the component data will always be separate, and Ada 
+   --  generics (let alone runtime) provides no way to generate code to get one 
+   --  from the other. So I'll have to manually implement *some* sort of 
+   --  Component_Kind -> component mapping, and I should pick where I do that to
+   --  minimise the work needed to add new components.
+
+
 
 end Cargame.ECS;

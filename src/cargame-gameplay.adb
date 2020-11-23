@@ -1,8 +1,11 @@
 with GL.Objects.Textures;
+with GL.Objects.Textures.Targets;
 with GL.Objects.Vertex_Arrays;
 with GL.Objects.Buffers;
 
+with Cargame.Globals;
 with Cargame.Uniforms;
+with Cargame.Util;
 
 package body Cargame.Gameplay is
 
@@ -30,7 +33,6 @@ package body Cargame.Gameplay is
          Acc : constant Acceleration_Type := Components.Acceleration.Get (E);
       begin
          Vel := Vel + Acc;
-         Util.Log ("Setting Velocity to " & Image (Vel));
          Components.Velocity.Set (E, Vel);
       end Tick_Velocity;
 
@@ -111,6 +113,55 @@ package body Cargame.Gameplay is
       begin
          Components.Normal_Matrix.Set (E, Normal);
       end Tick_Normal_Matrix;
+
+      --------------
+      --  Render  --
+      --------------
+
+      -------------------------------------------------------------------------
+      procedure Render (E : in ECS.Entity) is
+         use GL.Objects.Buffers;
+         use GL.Objects.Textures;
+         use GL.Objects.Textures.Targets;
+
+         M      : constant Models.Model := Components.Model.Get (E);
+         CamObj : constant Matrix4      := Components.CamObj_Matrix.Get (E);
+         Normal : constant Matrix3      := Components.Normal_Matrix.Get (E);
+      begin
+
+         Uniforms.CamObj_Transform.Set (CamObj);
+         Uniforms.Normal_Transform.Set (Normal);
+
+         GL.Objects.Vertex_Arrays.Bind (M.Vao);
+         Bind (Target => Array_Buffer,         Object => M.Vertex_Buffer);
+         Bind (Target => Element_Array_Buffer, Object => M.Index_Buffer);
+
+         for Mtl of M.Materials loop
+
+            Uniforms.Material_Shininess.Set (Mtl.Shininess);
+            Uniforms.Material_Ambient.Set   (Mtl.Ambient_Light);
+
+            if Mtl.Diffuse_Texture.Initialized then
+               Uniforms.Diffuse_Map.Set (Globals.Diffuse_Map_ID);
+               Set_Active_Unit (Globals.Diffuse_Map_ID);
+               Texture_2D.Bind (Mtl.Diffuse_Texture);
+            end if;
+
+            if Mtl.Specular_Texture.Initialized then
+               Uniforms.Specular_Map.Set (Globals.Specular_Map_ID);
+               Set_Active_Unit (Globals.Specular_Map_ID);
+               Texture_2D.Bind (Mtl.Specular_Texture);
+            end if;
+
+            GL.Objects.Buffers.Draw_Elements 
+               (Mode           => Triangles,
+                Index_Type     => UInt_Type,
+                Element_Offset => Integer (Mtl.First_Index),
+                Count          => Mtl.Num_Indices);
+
+         end loop;
+
+      end Render;
 
    end Systems;
 

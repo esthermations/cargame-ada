@@ -35,6 +35,7 @@ package Cargame.Gameplay is
       package Position         is new ECS.Generic_Component_Store (Position_Type,     Kind => Position);
       package Velocity         is new ECS.Generic_Component_Store (Velocity_Type,     Kind => Velocity);
       package Acceleration     is new ECS.Generic_Component_Store (Acceleration_Type, Kind => Acceleration);
+      package Model            is new ECS.Generic_Component_Store (Models.Model,      Kind => ECS.Model);
       package Rotation         is new ECS.Generic_Component_Store (Radians,           Kind => Rotation);
       package Rotational_Speed is new ECS.Generic_Component_Store (Radians,           Kind => Rotational_Speed); 
       package Render_Scale     is new ECS.Generic_Component_Store (Single,            Kind => Render_Scale);
@@ -51,6 +52,7 @@ package Cargame.Gameplay is
       procedure Tick_Object_Matrix  (E : in ECS.Entity);
       procedure Tick_CamObj_Matrix  (E : in ECS.Entity);
       procedure Tick_Normal_Matrix  (E : in ECS.Entity);
+      procedure Render              (E : in ECS.Entity);
    end Systems;
 
    ----------------------------------------------------------------------------
@@ -93,7 +95,6 @@ package Cargame.Gameplay is
           Pitch_Up     => Unbound,
           Pitch_Down   => Unbound,
           Quit         => Escape);
-
 
       --  Should this be a component?
       type Player_Action_Boolean_Array is array (Player_Action) of Boolean;

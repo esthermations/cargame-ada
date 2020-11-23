@@ -26,23 +26,21 @@ package Cargame.Globals is
    ----------------------------------------------------------------------------
    --  Fundamental timings and intervals
 
+   subtype Frame is Positive;
+   subtype Frames is Frame;
+
    Program_Epoch          : Time               := Clock;
    Next_Frame_Time        : Time               := Clock;
-   Target_FPS             : constant Positive  := 120;
-   Frame_Interval         : constant Time_Span := (Seconds (1) / Target_FPS);
-   Seconds_Per_Frame      : constant Single    :=
-      (Single (1.0) / Single (Target_FPS));
+   Target_FPS             : constant Frames    := Frames (120);
+   Frame_Interval         : constant Time_Span := 
+      (Seconds (1) / Positive (Target_FPS));
 
-   function Frames (Num : in Natural) return Time_Span is
-      (Num * Globals.Frame_Interval);
-   --  Unit of time, so we can write stuff like
-   --  "Input_Poll_Interval := Frames (5);"
-
-   Next_Input_Poll_Time : Time               := Clock;
-   Input_Poll_Interval  : constant Time_Span := Frames (2);
-
-   Frame_Number : Natural := 0;
+   Current_Frame : Frame := Frames'First;
    --  Incremented in the game loop.
+
+   --  In an ideal world, when would this frame happen?
+   function Scheduled_Time_For_Frame (F : in Frame) return Time is
+      (Program_Epoch + (F * Frame_Interval));
 
    ----------------------------------------------------------------------------
    --  Rendering state

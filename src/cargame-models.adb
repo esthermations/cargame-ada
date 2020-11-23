@@ -5,10 +5,7 @@ with Ada.Text_IO;             use Ada.Text_IO;
 
 with GL;
 with GL.Objects.Textures;
-with GL.Objects.Textures.Targets;
 
-with Cargame.Gameplay;
-with Cargame.Globals;
 with Cargame.Uniforms;
 with Cargame.Obj_Parser;
 with Cargame.Util; use Cargame.Util;
@@ -30,15 +27,13 @@ package body Cargame.Models is
    ----------------------------------------------------------------------------
    function Is_Renderable (M : Model) return Boolean is
       Has_Valid_VAO : constant Boolean := (M.Vao /= Null_Array_Object);
-      Has_Indices   : constant Boolean := (M.Num_Indices /= 0);
       Has_Materials : constant Boolean := (M.Materials.Length /= 0);
    begin
-      if Has_Valid_VAO and Has_Indices and Has_Materials then
+      if Has_Valid_VAO and Has_Materials then
          return True;
       else
          Util.Log_Error ("Model isn't renderable:");
          Util.Log_Error ("Has_Valid_VAO = " & Boolean'Image (Has_Valid_VAO));
-         Util.Log_Error ("Has_Indices   = " & Boolean'Image (Has_Indices));
          Util.Log_Error ("Has_Materials = " & Boolean'Image (Has_Materials));
          Util.Log ("All the above must be true for it to be renderable.");
          return False;
@@ -191,14 +186,12 @@ package body Cargame.Models is
 
       Unbind_VAO;
 
-      return Model'(Vao           => Vao,
-                    Materials     => Out_Materials,
-                    Dimensions    => Get_Bounding_Volume (Vertices),
+      return Model'(Vao           => Vao, 
                     Vertex_Buffer => Vertex_Buf,
+                    Index_Buffer  => Index_Buf,
                     Normal_Buffer => Normal_Buf,
                     TexCrd_Buffer => TexCrd_Buf,
-                    Index_Buffer  => Index_Buf,
-                    Num_Indices   => Indices'Length);
+                    Materials     => Out_Materials);
    end Create_Model;
 
    ----------------------------------------------------------------------------
@@ -371,122 +364,5 @@ package body Cargame.Models is
                            Materials => Obj.Materials);
 
    end Create_Model_From_Obj;
-
-   ----------------------------------------------------------------------------
-   procedure Send_Updated_Uniforms (Object_Position : in Position_Type;
-                                    Object_Scale    : in Single := 1.0;
-                                    Object_Rotation : in Radians := 0.0)
-   is
-      Camera_Transform : constant Matrix4 := Uniforms.Camera_Transform.Get;
-      Object_Transform : constant Matrix4 :=
-         Translate (Rotate (Scale (Identity4, Object_Scale), 
-                            Object_Rotation), 
-                    Object_Position);
-      CamObj_Transform : constant Matrix4 :=
-         Camera_Transform * Object_Transform;
-
-      Normal_Transform : constant Matrix3 :=
-         Transpose (Inverse (Mat4_To_Mat3 (CamObj_Transform)));
-   begin
-      for I in Normal_Transform'Range (1) loop
-         for J in Normal_Transform'Range (2) loop
-            Put (" " & Normal_Transform (I, J)'Img);
-         end loop;
-         New_Line; --Put (" ; ");
-      end loop;
-      New_Line;
-      New_Line;
-
-      Uniforms.Object_Transform.Set (Object_Transform);
-      Uniforms.CamObj_Transform.Set (CamObj_Transform);
-      Uniforms.Normal_Transform.Set (Normal_Transform);
-
-   end Send_Updated_Uniforms;
-
-   ----------------------------------------------------------------------------
-   procedure Render (M : in Model;
-                     E : in ECS.Entity)
-   is
-      use GL.Objects.Textures;
-      use GL.Objects.Textures.Targets;
-      use Cargame.Gameplay;
-
-      CamObj : constant Matrix4 := Components.CamObj_Matrix.Get (E);
-      Normal : constant Matrix3 := Components.Normal_Matrix.Get (E);
-   begin
-
-      --Send_Updated_Uniforms (Object_Position => Position,
-      --                       Object_Rotation => Rotation,
-      --                       Object_Scale    => Scale);
-
-      Uniforms.CamObj_Transform.Set (CamObj);
-      Uniforms.Normal_Transform.Set (Normal);
-
-      Bind (M.Vao);
-      Bind (Array_Buffer,         M.Vertex_Buffer);
-      Bind (Element_Array_Buffer, M.Index_Buffer);
-
-      for Mtl of M.Materials loop
-
-         Uniforms.Material_Shininess.Set (Mtl.Shininess);
-         Uniforms.Material_Ambient.Set   (Mtl.Ambient_Light);
-
-         if Mtl.Diffuse_Texture.Initialized then
-            Uniforms.Diffuse_Map.Set (Globals.Diffuse_Map_ID);
-            Set_Active_Unit (Globals.Diffuse_Map_ID);
-            Texture_2D.Bind (Mtl.Diffuse_Texture);
-         end if;
-
-         if Mtl.Specular_Texture.Initialized then
-            Uniforms.Specular_Map.Set (Globals.Specular_Map_ID);
-            Set_Active_Unit (Globals.Specular_Map_ID);
-            Texture_2D.Bind (Mtl.Specular_Texture);
-         end if;
-
-         Draw_Elements (Mode           => Triangles,
-                        Index_Type     => UInt_Type,
-                        Element_Offset => Integer (Mtl.First_Index),
-                        Count          => Mtl.Num_Indices);
-
-      end loop;
-
-      Unbind_VAO;
-   end Render;
-
-   ----------------------------------------------------------------------------
-   procedure Draw_A_Line (From, To : in Position_Type;
-                          Vao : in Vertex_Array_Object;
-                          Vbo : in Buffer) 
-   is
-      Data : aliased constant Vector3_Array (1 .. 2) := (From, To);
-   begin
-      Vao.Bind;
-      Bind (Array_Buffer, Vbo);
-
-      Load_Vector3_Buffer (Target => Array_Buffer,
-                           Data   => Data,
-                           Usage  => Static_Draw);
-
-      Set_Vertex_Attrib_Pointer (Index      => Vertices_Attribute,
-                                 Count      => Vector3'Length,
-                                 Kind       => Single_Type,
-                                 Normalized => False,
-                                 Stride     => 0,
-                                 Offset     => 0);
-
-      Enable_Vertex_Attrib_Array (Vertices_Attribute);
-
-      Cargame.Uniforms.Drawing_A_Line.Set (1);
-
-      Send_Updated_Uniforms (Object_Position => Origin);
-
-      Draw_Arrays (Mode  => Lines,
-                   First => 0,
-                   Count => 2);
-
-      Cargame.Uniforms.Drawing_A_Line.Set (0);
-
-      Unbind_VAO;
-   end Draw_A_Line;
 
 end Cargame.Models;

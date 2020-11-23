@@ -4,6 +4,8 @@ with Conts.Vectors.Definite_Unbounded;
 
 with Cargame.Util;
 
+with Cargame.Globals; use Cargame.Globals;
+
 package body Cargame.ECS is
 
    -----------
@@ -96,7 +98,7 @@ package body Cargame.ECS is
       type Associated_Entities is array (Component_Kind) of Entity_Set; 
       Entities : Associated_Entities;
 
-      Never : constant Time := Ada.Real_Time.Time_First;
+      Never : constant Frame := Frame'First;
 
       package System_Names is new Ada.Strings.Bounded.Generic_Bounded_Length (50);
       subtype System_Name is System_Names.Bounded_String;
@@ -105,8 +107,8 @@ package body Cargame.ECS is
          Name     : System_Name;
          Proc     : System_Proc;
          Comps    : Enabled_Components;
-         Last_Run : Time := Never;
-         Interval : Time_Span;
+         Last_Run : Frame := Never;
+         Interval : Frames;
       end record;
 
       package System_Vectors is new Conts.Vectors.Definite_Unbounded 
@@ -142,7 +144,7 @@ package body Cargame.ECS is
       procedure Register_System (Name         : in String;
                                  Proc         : in not null System_Proc;
                                  Components   : in Enabled_Components;
-                                 Run_Interval : in Time_Span) 
+                                 Run_Interval : in Frames) 
       is
          Sys : constant System := 
             (Name     => System_Names.To_Bounded_String (Name),
@@ -266,16 +268,18 @@ package body Cargame.ECS is
          --  the moment, though, that's a bit above my pay grade.
 
          Ents : Entity_Set;
-         Now  : constant Time := Clock;
       begin
          for I in Systems loop
             declare
-               Sys : System renames Systems (I);
+               Now       : Frame renames Globals.Current_Frame;
+               Sys       : System renames Systems (I);
+               Scheduled : constant Frame   := Sys.Last_Run + Sys.Interval;
+               Due       : constant Boolean := (Sys.Last_Run = Never) or (Now >= Scheduled);
             begin
-               if Sys.Last_Run = Never or else 
-                  Sys.Last_Run + Sys.Interval <= Now 
-               then
+               if Due then
                   --  Run the thing
+
+                  --Util.Log ("Running System: " & System_Names.To_String (Sys.Name) & " (next due on frame " & Frame'Image (Now + Sys.Interval) & ")");
 
                   declare
                      New_Val : System := Systems (I);
@@ -289,6 +293,11 @@ package body Cargame.ECS is
                   for E of Ents loop
                      Sys.Proc.all (E);
                   end loop;
+
+              else
+                 Util.Log ("NOT running system " 
+                           & System_Names.To_String (Sys.Name) 
+                           & "(due on frame " & Scheduled'Img & ")");
               end if;
             end;
          end loop;

@@ -84,7 +84,7 @@ package body Cargame.Util is
       use Ada.Text_IO;
    begin
       Put_Line (Standard_Error,
-                "[Frame" & Globals.Frame_Number'Img & "]"
+                "[Frame" & Globals.Current_Frame'Img & "]"
                    & Log_Task_Indent
                    & Abbreviate_Context (Context)
                    & " " & Message);
