@@ -24,8 +24,7 @@ package body Cargame.Models is
       (for all V of Arr => (for all X of V => X'Valid));
 
    ----------------------------------------------------------------------------
-   function Get_Bounding_Volume (Verts : in Vector3_Array)
-      return Volume3D_Type;
+   function Get_Bounding_Volume (Verts : in Vector3_Array) return Volume3D_Type;
 
    ----------------------------------------------------------------------------
    function Is_Renderable (M : Model) return Boolean is
@@ -210,27 +209,21 @@ package body Cargame.Models is
       --  something like a vertex, normal, texcoord, etc. In this case, we're
       --  only dealing with those three.
 
-      Obj : constant Cargame.Obj_Parser.Obj_Data := 
+      Obj : constant Cargame.Obj_Parser.Obj_Data :=
          Cargame.Obj_Parser.Parse (Obj_File_Path);
 
       subtype Attribute_Index is GL.Types.Size;
 
       package GL_Attributes is
 
-         --  This is the ENTIRE INTERFACE.
-
          --  Inputs:
          procedure Add (V, N : in Vector3; T : in Vector2);
 
          --  Outputs:
-         function Get_Vertices return Vector3_Array
-            with Pre => Attributes_Are_Valid;
-         function Get_Normals return Vector3_Array
-            with Pre => Attributes_Are_Valid;
-         function Get_TexCrds return Vector2_Array
-            with Pre => Attributes_Are_Valid;
-         function Get_Indices return Int_Array
-            with Pre => Attributes_Are_Valid;
+         function Get_Vertices return Vector3_Array with Pre => Attributes_Are_Valid;
+         function Get_Normals  return Vector3_Array with Pre => Attributes_Are_Valid;
+         function Get_TexCrds  return Vector2_Array with Pre => Attributes_Are_Valid;
+         function Get_Indices  return Int_Array     with Pre => Attributes_Are_Valid;
 
          function Attributes_Are_Valid return Boolean with Ghost;
          --  For preconditions only.
@@ -245,7 +238,6 @@ package body Cargame.Models is
          --  be repeated.
          Next_ID : Attribute_Index := 0;
          --  Indices passed to glDrawElements and such. Starts at 0.
-         --  Materials : Vector_Of_Material;
 
          type FC_Data is record
             V, N : Vector3;
@@ -273,16 +265,17 @@ package body Cargame.Models is
       package body GL_Attributes is
 
          function Attributes_Are_Valid return Boolean is
+            Expected_Length : constant Count_Type := Vertices.Length;
          begin
             --  Vertices, Normals and TexCrds are our attributes. Each
             --  attribute must have one of each of these, so their lengths must
             --  be the same. Indices will either be the same length (if every
             --  point on the model is unique, which would be very strange) or
             --  longer, if some attributes are repeated.
-            pragma Assert (Vertices.Length =  Normals.Length);
-            pragma Assert (Vertices.Length =  TexCrds.Length);
-            pragma Assert (Vertices.Length <= Attrib_Sequence.Length);
-            return True;
+            return Normals.Length   = Expected_Length and
+                   TexCrds.Length   = Expected_Length and
+                   Expected_Length <= Attrib_Sequence.Length;
+
          end Attributes_Are_Valid;
 
          procedure Add (V, N : in Vector3; T : in Vector2) is
@@ -372,6 +365,7 @@ package body Cargame.Models is
 
    end Create_Model_From_Obj;
 
+
    ----------------------------------------------------------------------------
    procedure Send_Updated_Uniforms (Object_Position : in Position_Type;
                                     Object_Scale    : in Single := 1.0;
@@ -379,8 +373,8 @@ package body Cargame.Models is
    is
       Camera_Transform : constant Matrix4 := Uniforms.Camera_Transform.Get;
       Object_Transform : constant Matrix4 :=
-         Translate (Rotate (Scale (Identity4, Object_Scale), 
-                            Object_Rotation), 
+         Translate (Rotate (Scale (Identity4, Object_Scale),
+                            Object_Rotation),
                     Object_Position);
       CamObj_Transform : constant Matrix4 :=
          Camera_Transform * Object_Transform;
@@ -456,7 +450,7 @@ package body Cargame.Models is
    ----------------------------------------------------------------------------
    procedure Draw_A_Line (From, To : in Position_Type;
                           Vao : in Vertex_Array_Object;
-                          Vbo : in Buffer) 
+                          Vbo : in Buffer)
    is
       Data : aliased constant Vector3_Array (1 .. 2) := (From, To);
    begin

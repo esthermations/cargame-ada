@@ -50,6 +50,7 @@ package body Cargame.Util is
          Module := Split_Context (2);
       end if;
 
+      --  Dynamically assign a colour :)
       Colour := Text_Colour'Val 
          (Module.Length mod ANSI_Colour_Prefix'Length + 1);
 
@@ -84,8 +85,8 @@ package body Cargame.Util is
       use Ada.Text_IO;
    begin
       Put_Line (Standard_Error,
-                Log_Task_Indent
-                   & "[Frame" & Globals.Frame_Number'Img & "]"
+                "[Frame" & Globals.Frame_Number'Img & "]"
+                   & Log_Task_Indent
                    & Abbreviate_Context (Context)
                    & " " & Message);
    end Log;

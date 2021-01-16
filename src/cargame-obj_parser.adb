@@ -14,16 +14,31 @@ package body Cargame.Obj_Parser is
    ---------------------------------------------------------------------------
    --  Declarations
 
-   type Face is array (Integer range 1 .. 3) of Face_Component;
-   --  I'm assuming here that faces will be specified as triangles, i.e. '1/2/3'
-   --  or '1//3' or something. This isn't actually required by the obj format.
+   type Face is array (Integer range <>) of Face_Component;
 
    ---------------------------------------------------------------------------
    function Get_Face (Split_Line : in XString_Array) return Face
       is separate
-      with Pre        => Split_Line (1) = "f",
-           Global     => null,
-           Depends    => (Get_Face'Result => Split_Line);
+      with Pre     => Split_Line (1) = "f",
+           Post    => Get_Face'Result'Length = (Split_Line'Length - 1),
+           Global  => null,
+           Depends => (Get_Face'Result => Split_Line);
+
+   function Convert_Into_Triangles (F : in Face) return Face
+      is separate
+      with Pre     => F'Length >= 3, --  We can't turn a line into a triangle...
+           Post    => Convert_Into_Triangles'Result'Length >= F'Length,
+           Global  => null,
+           Depends => (Convert_Into_Triangles'Result => F);
+   --  Perform an EXTREMELY naive transformation to convert the given face into
+   --  a HOPEFULLY equivalent face, composed entirely of triangles. This
+   --  algorithm assumes that the given face is convex---i.e., that no line
+   --  between any of its edges will exit the face. Since this function only
+   --  indices, not vertices, we have no way of verifying this.
+   --
+   --  If it's already a triangle, it will be returned unchanged. Otherwise, the
+   --  resulting Face will have quite a few more Face_Components in it. It's
+   --  quite a naive transformation.
 
    ---------------------------------------------------------------------------
    --  Definitions
@@ -119,7 +134,6 @@ package body Cargame.Obj_Parser is
             when V => Unique_Vertices.Append (Get_Vector3 (Split_Line (Split_Line'First .. Split_Last)));
             when F =>
                declare
-
                   UV : Vector_Of_Vector3 renames Unique_Vertices;
                   UN : Vector_Of_Vector3 renames Unique_Normals;
                   UT : Vector_Of_Vector2 renames Unique_TexCrds;
@@ -128,25 +142,43 @@ package body Cargame.Obj_Parser is
                   subtype UN_Range is GL.Types.Size range UN.First_Index .. UN.Last_Index;
                   subtype UT_Range is GL.Types.Size range UT.First_Index .. UT.Last_Index;
 
-                  F : constant Face := Get_Face (Split_Line (Split_Line'First .. Split_Last));
+                  Original_Face : constant Face := 
+                     Get_Face (Split_Line (Split_Line'First .. Split_Last));
+
+                  F : constant Face := Convert_Into_Triangles (Original_Face);
+
+                  TexCrd_Is_Used : Boolean := F (F'First).T /= Unset_Index;
                begin
+
+                  if Ret.Has_TexCrds and not TexCrd_Is_Used then
+                     Ret := (Has_TexCrds => False,
+                             Vertices    => <>,
+                             Normals     => <>,
+                             Materials   => <>);
+                  end if;
+
                   for FC of F loop
-                     if (FC.V not in UV_Range) then
-                        Util.Log_Error ("Failing on FC.V = " & Int'Image (FC.V));
-                        raise Invalid_Obj_Data;
-                     end if;
-                     if (FC.N not in UN_Range) then
-                        Util.Log_Error ("Failing on FC.N = " & Int'Image (FC.N));
-                        raise Invalid_Obj_Data;
-                     end if;
-                     if (FC.T not in UT_Range) then
-                        Util.Log_Error ("Failing on FC.T = " & Int'Image (FC.T));
-                        raise Invalid_Obj_Data;
+
+                     --  Confirm that the VTN indices actually correspond to
+                     --  values we've grabbed from the obj file. If we don't
+                     --  throw here, we'll get a Constraint_Error when we try
+                     --  using these values to index Unique_* in a moment.
+                     if FC.V not in UV_Range or 
+                        FC.N not in UN_Range or 
+                        (Ret.Has_TexCrds and then FC.T not in UT_Range)
+                     then
+                        raise Invalid_Obj_Data 
+                           with "Face component specified an invalid index:" 
+                              & Line.To_String;
                      end if;
 
                      Ret.Vertices.Append (Unique_Vertices (FC.V));
                      Ret.Normals.Append  (Unique_Normals  (FC.N));
-                     Ret.TexCrds.Append  (Unique_TexCrds  (FC.T));
+
+                     if Ret.Has_TexCrds then
+                        Ret.TexCrds.Append  (Unique_TexCrds (FC.T));
+                     end if;
+
                   end loop;
                end;
 
@@ -188,8 +220,8 @@ package body Cargame.Obj_Parser is
                end Handle_UseMtl;
 
             when G => null;
-            when O => null; --  TODO (wtok, 2018-03-29)
-            when S => null; --  TODO (wtok, 2018-03-29)
+            when O => null;
+            when S => null;
          end case;
       end loop Loop_Over_Obj_Lines;
 
@@ -241,28 +273,24 @@ package body Cargame.Obj_Parser is
       --  Ensure that every vertex has an associated normal and texcoord
 
       if Num_Normals /= Num_Vertices then
-         Util.Log_Error
-            ("For some reason there aren't as many normals as vertices.");
+         Util.Log_Error ("There aren't as many normals as vertices.");
          Valid := False;
       end if;
 
       if Num_TexCrds /= Num_Vertices then
-         Util.Log_Error
-            ("For some reason there aren't as many texcrds as vertices.");
+         Util.Log_Error ("There aren't as many texcrds as vertices.");
          Valid := False;
       end if;
 
       --  Ensure that our various *_Indices vectors are indexed alike
 
       if (Data.Normals.First_Index /= Data.Vertices.First_Index) then
-         Util.Log_Error
-            ("Vertices and normals aren't indexed alike");
+         Util.Log_Error ("Vertices and normals aren't indexed alike");
          Valid := False;
       end if;
 
       if (Data.TexCrds.First_Index /= Data.Vertices.First_Index) then
-         Util.Log_Error
-            ("Vertices and texcrds aren't indexed alike");
+         Util.Log_Error ("Vertices and texcrds aren't indexed alike");
          Valid := False;
       end if;
 
@@ -289,8 +317,7 @@ package body Cargame.Obj_Parser is
          if not (M.First_Index in Valid_Index_Range) then
             Util.Log_Error
                (M.Printable_Name
-                   & "'s First_Index ("
-                   & Int'Image (M.First_Index)
+                   & "'s First_Index (" & M.First_Index'Img
                    & ") isn't a valid index of Vertices");
             Valid := False;
          end if;
@@ -298,8 +325,7 @@ package body Cargame.Obj_Parser is
          if not (M.Final_Index in Valid_Index_Range) then
             Util.Log_Error
                (M.Printable_Name
-                   & "'s final index ("
-                   & Int'Image (M.Final_Index)
+                   & "'s final index (" & M.Final_Index'Img
                    & ") isn't a valid index of Vertices");
             Valid := False;
          end if;

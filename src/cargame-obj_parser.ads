@@ -1,4 +1,5 @@
 with Ada.Text_IO;           use Ada.Text_IO;
+with Ada.Directories;
 
 with GL;
 with GL.Types;
@@ -24,11 +25,16 @@ package Cargame.Obj_Parser is
    ---------------------------------------------------------------------------
    --  Obj_Data
 
-   type Obj_Data is record
+   type Obj_Data (Has_TexCrds : Boolean := True) is record
+      Materials : Vector_Of_Material;
+
       Vertices  : Vector_Of_Vector3;
       Normals   : Vector_Of_Vector3;
-      TexCrds   : Vector_Of_Vector2;
-      Materials : Vector_Of_Material;
+
+      case Has_TexCrds is 
+         when True   => TexCrds : Vector_Of_Vector2;
+         when others => null;
+      end case; 
    end record;
 
    ---------------------------------------------------------------------------
@@ -37,7 +43,7 @@ package Cargame.Obj_Parser is
    --  and logs details if it finds any issues, else true.
 
    ---------------------------------------------------------------------------
-   function Parse (File_Path : in     String) return Obj_Data
+   function Parse (File_Path : in String) return Obj_Data
        with Pre  => Globals.GL_Program.Initialized,
             Post => Is_Valid (Parse'Result);
 
