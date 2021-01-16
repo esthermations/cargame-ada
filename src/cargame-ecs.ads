@@ -4,6 +4,7 @@ with Ada.Real_Time; use Ada.Real_Time;
 with Conts.Maps.Def_Def_Unbounded;
 with Conts.Functional.Sets;
 
+with Cargame.Globals;
 
 package Cargame.ECS is
 

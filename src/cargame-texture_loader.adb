@@ -84,6 +84,8 @@ package body Cargame.Texture_Loader is
           Source_Type     => GL.Pixels.Unsigned_Byte,
           Source          => To_Image_Source (Image_Data));
 
+      Util.Log ("Load_From_Data completed.");
+
       Generate_Mipmap (Texture_2D);
 
       STBI_Image_Free (Image_Data);

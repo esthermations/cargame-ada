@@ -5,7 +5,6 @@ with Glfw;
 with Glfw.Input;
 with Glfw.Input.Keys;
 
-with Cargame.Globals;
 with Cargame.Types;
 with Cargame.Models;
 with Cargame.ECS;
@@ -34,20 +33,18 @@ package Cargame.Gameplay is
 
       type Any_Control_Action is
          (No_Action,
+          --  Menu actions
+          Quit,
           --  Movement actions:
           Accelerate, Decelerate,
           Strafe_Left, Strafe_Right, Strafe_Up, Strafe_Down,
           --  Rotate actions:
-          Yaw_Left, Yaw_Right, Roll_Left, Roll_Right, Pitch_Up, Pitch_Down,
-          --  Menu actions
-          Quit);
+          Yaw_Left, Yaw_Right, Roll_Left, Roll_Right, Pitch_Up, Pitch_Down);
 
       subtype Control_Action is Any_Control_Action range
          Any_Control_Action'Succ (No_Action) .. Any_Control_Action'Last;
 
       subtype Player_Action is Control_Action range Accelerate .. Pitch_Down;
-      subtype Movement_Action is Control_Action range Accelerate .. Strafe_Down;
-      subtype Rotate_Action is Control_Action range Yaw_Left .. Pitch_Down;
 
       Unbound : constant Key := Unknown;
 

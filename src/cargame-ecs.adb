@@ -2,6 +2,8 @@ with Ada.Strings.Bounded;
 
 with Cargame.Util;
 
+with Cargame.Globals; use Cargame.Globals;
+
 package body Cargame.ECS is
 
    Next_Entity : Entity := Entity'First;

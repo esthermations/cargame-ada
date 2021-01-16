@@ -21,9 +21,9 @@ function Get_Face (Split_Line : in XString_Array) return Face is
    begin
 
       --  Input: Something like '1/2/3' or '1//3'
-      Str.Split (Sep => "/", 
-                 Omit_Empty => False, 
-                 Into => Split, 
+      Str.Split (Sep => "/",
+                 Omit_Empty => False,
+                 Into => Split,
                  Last => Unused);
 
       TexCrd_Is_Used := not Split (2).Is_Empty;
@@ -41,7 +41,7 @@ function Get_Face (Split_Line : in XString_Array) return Face is
 
       --  Confirm that the obj file complies to spec...
       if 0 in FC.V | FC.N or (TexCrd_Is_Used and 0 in FC.T) then
-         raise Invalid_Obj_File 
+         raise Invalid_Obj_File
             with "Obj file gave a zero index on a face, which is out of spec.";
       end if;
 
@@ -70,7 +70,7 @@ function Get_Face (Split_Line : in XString_Array) return Face is
    ----------------------------------------------------------------------------
    --  Variables
 
-   Ret : Face (1 .. (Split_Line'Length - 1)) := 
+   Ret : Face (1 .. (Split_Line'Length - 1)) :=
       (others => Face_Component'(others => Unset_Index));
 
 begin

@@ -59,9 +59,10 @@ package Cargame.Types is
    subtype Valid_Vector2 is Vector2 with Dynamic_Predicate => Is_Valid (Valid_Vector2);
    subtype Valid_Vector3 is Vector3 with Dynamic_Predicate => Is_Valid (Valid_Vector3);
 
-   subtype Distance_Type is Valid_Vector3;
-   subtype Position_Type is Valid_Vector3;
-   subtype Velocity_Type is Valid_Vector3;
+   subtype Position_Type     is Valid_Vector3;
+   subtype Distance_Type     is Valid_Vector3;
+   subtype Velocity_Type     is Valid_Vector3;
+   subtype Acceleration_Type is Valid_Vector3;
 
    subtype Volume3D_Type is Valid_Vector3
       with Dynamic_Predicate => (for all Val of Volume3D_Type => Val = abs Val);

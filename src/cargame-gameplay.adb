@@ -1,8 +1,11 @@
 with GL.Objects.Textures;
+with GL.Objects.Textures.Targets;
 with GL.Objects.Vertex_Arrays;
 with GL.Objects.Buffers;
 
+with Cargame.Globals;
 with Cargame.Uniforms;
+with Cargame.Util;
 
 package body Cargame.Gameplay is
 
@@ -57,27 +60,15 @@ package body Cargame.Gameplay is
          Components.Normal_Matrix.Set (E, Normal);
       end Tick_Normal_Matrix;
 
-   end Systems;
+      --------------
+      --  Render  --
+      --------------
 
-   --  procedure Render (E : in Entity) is
-   --     use Cargame.ECS.Components;
-   --     Vao : Vertex_Array_Object := Vertex_Array.Get (E);
-   --     Vtx_Buf : Vertex_Buffer   := Vertex_Buffer.Get (E);
-   --     Elm_Buf : Element_Buffer  := Element_Buffer.Get (E);
-
-   --     Pos : Position_Type := Position.Get (E);
-   --     Rot : Radians       := Rotation.Get (E);
-   --     Scale : Single      := Render_Scale.Get (E);
-
-   --     Amb_Light : Vector3 := Ambient_Light.Get (E);
-   --     Dif_Light : Vector3;
-   --     Spe_Light : Vector3;
-
-   --     Elm_Range : Element_Range := Element_Range.Get (E);
-
-   --     use GL.Objects.Textures;
-   --     use GL.Objects.Textures.Targets;
-   --  begin
+      -------------------------------------------------------------------------
+      procedure Render (E : in ECS.Entity) is
+         use GL.Objects.Buffers;
+         use GL.Objects.Textures;
+         use GL.Objects.Textures.Targets;
 
    --     Send_Updated_Uniforms (Object_Position => Pos,
    --                            Object_Rotation => Rot,
@@ -185,33 +176,41 @@ package body Cargame.Gameplay is
             Position (I) := Position (I) + Velocity (I);
          end loop;
 
-         ---------------------
-         --  Tick Rotation --
-         ---------------------
+         GL.Objects.Vertex_Arrays.Bind (M.Vao);
+         Bind (Target => Array_Buffer,         Object => M.Vertex_Buffer);
+         Bind (Target => Element_Array_Buffer, Object => M.Index_Buffer);
 
          Rotational_Velocity :=
             Rotational_Velocity +
             0.001 * (Radians (Throttle (Yaw_Right).Value) -
                      Radians (Throttle (Yaw_Left).Value));
 
-         Rotation := Rotation + Rotational_Velocity;
+            Uniforms.Material_Shininess.Set (Mtl.Shininess);
+            Uniforms.Material_Ambient.Set   (Mtl.Ambient_Light);
 
-      end Tick;
+            if Mtl.Diffuse_Texture.Initialized then
+               Uniforms.Diffuse_Map.Set (Globals.Diffuse_Map_ID);
+               Set_Active_Unit (Globals.Diffuse_Map_ID);
+               Texture_2D.Bind (Mtl.Diffuse_Texture);
+            end if;
 
-   end Player;
+            if Mtl.Specular_Texture.Initialized then
+               Uniforms.Specular_Map.Set (Globals.Specular_Map_ID);
+               Set_Active_Unit (Globals.Specular_Map_ID);
+               Texture_2D.Bind (Mtl.Specular_Texture);
+            end if;
 
-   --------------
-   --  Planet  --
-   --------------
+            GL.Objects.Buffers.Draw_Elements
+               (Mode           => Triangles,
+                Index_Type     => UInt_Type,
+                Element_Offset => Integer (Mtl.First_Index),
+                Count          => Mtl.Num_Indices);
 
-   package body Planet is
+         end loop;
 
-      procedure Tick is
-      begin
-         Rotation := Rotation + Rotational_Velocity;
-      end Tick;
+      end Render;
 
-   end Planet;
+   end Systems;
 
    ----------------
    --  Controls  --

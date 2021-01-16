@@ -21,7 +21,6 @@ uniform sampler2D u_Diffuse_Map;
 uniform sampler2D u_Specular_Map;
 
 uniform float u_Seconds_Since_Epoch;
-uniform bool  u_Drawing_A_Line = false;
 
 /// Generate a number that looks random but definitely isn't.
 float Fake_Random(in vec2 Seed) {
@@ -64,13 +63,6 @@ vec4 Phong_Point_Light(in vec4 Position, in vec3 Normal) {
 }
 
 void main(void) {
-    // gl_FragColor = normalize(vec4(0.8) + t_Original_Vertex);
     vec3 Modified_Normal = normalize(t_Modified_Normal);
-
-    if (u_Drawing_A_Line) {
-        o_Frag_Colour = vec4 (1.0, 0.0, 1.0, 1.0); // Purple
-    } else {
-        // Non-procedural stuff, so do light+textures, etc.
-        o_Frag_Colour = Phong_Point_Light(t_Modified_Vertex, Modified_Normal);
-    }
+    o_Frag_Colour = Phong_Point_Light(t_Modified_Vertex, Modified_Normal);
 }

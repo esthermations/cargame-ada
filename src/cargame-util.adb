@@ -51,7 +51,7 @@ package body Cargame.Util is
       end if;
 
       --  Dynamically assign a colour :)
-      Colour := Text_Colour'Val 
+      Colour := Text_Colour'Val
          (Module.Length mod ANSI_Colour_Prefix'Length + 1);
 
       return "[" & Coloured (Module.To_String, Colour) & "]";
@@ -105,9 +105,9 @@ package body Cargame.Util is
    end Got_Here;
 
    ----------------------------------------------------------------------------
-   procedure Start 
-      (LT      : in out Log_Task; 
-       Message : in     String; 
+   procedure Start
+      (LT      : in out Log_Task;
+       Message : in     String;
        Context : in     String := GNAT.Source_Info.Enclosing_Entity)
    is
    begin
@@ -130,8 +130,8 @@ package body Cargame.Util is
 
       Num_Log_Tasks_Running := Num_Log_Tasks_Running - 1;
 
-      Log (Message => 
-              Cyan ("Task completed in " & Time_Span_Image 
+      Log (Message =>
+              Cyan ("Task completed in " & Time_Span_Image
                        (LT.Time_Stopped - LT.Time_Started)),
            Context => To_String (LT.Context));
    end Complete;
@@ -156,7 +156,7 @@ package body Cargame.Util is
          --  the world? Are the Maldives still above water? Did world
          --  governments figure out how to legislate to stop apps competing
          --  with well-regulated markets by not holding up worker's rights?
-         return "0 nanoseconds"; 
+         return "0 nanoseconds";
       elsif TS < Microseconds (1) then
          return Integer'Image (TS / Nanoseconds (1)) & " nanoseconds";
       elsif TS < Milliseconds (1) then

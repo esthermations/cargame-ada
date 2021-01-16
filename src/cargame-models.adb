@@ -5,10 +5,7 @@ with Ada.Text_IO;             use Ada.Text_IO;
 
 with GL;
 with GL.Objects.Textures;
-with GL.Objects.Textures.Targets;
 
-with Cargame.Gameplay;
-with Cargame.Globals;
 with Cargame.Uniforms;
 with Cargame.Obj_Parser;
 with Cargame.Util; use Cargame.Util;
@@ -29,15 +26,13 @@ package body Cargame.Models is
    ----------------------------------------------------------------------------
    function Is_Renderable (M : Model) return Boolean is
       Has_Valid_VAO : constant Boolean := (M.Vao /= Null_Array_Object);
-      Has_Indices   : constant Boolean := (M.Num_Indices /= 0);
       Has_Materials : constant Boolean := (M.Materials.Length /= 0);
    begin
-      if Has_Valid_VAO and Has_Indices and Has_Materials then
+      if Has_Valid_VAO and Has_Materials then
          return True;
       else
          Util.Log_Error ("Model isn't renderable:");
          Util.Log_Error ("Has_Valid_VAO = " & Boolean'Image (Has_Valid_VAO));
-         Util.Log_Error ("Has_Indices   = " & Boolean'Image (Has_Indices));
          Util.Log_Error ("Has_Materials = " & Boolean'Image (Has_Materials));
          Util.Log ("All the above must be true for it to be renderable.");
          return False;
@@ -191,13 +186,11 @@ package body Cargame.Models is
       Unbind_VAO;
 
       return Model'(Vao           => Vao,
-                    Materials     => Out_Materials,
-                    Dimensions    => Get_Bounding_Volume (Vertices),
                     Vertex_Buffer => Vertex_Buf,
+                    Index_Buffer  => Index_Buf,
                     Normal_Buffer => Normal_Buf,
                     TexCrd_Buffer => TexCrd_Buf,
-                    Index_Buffer  => Index_Buf,
-                    Num_Indices   => Indices'Length);
+                    Materials     => Out_Materials);
    end Create_Model;
 
    ----------------------------------------------------------------------------
