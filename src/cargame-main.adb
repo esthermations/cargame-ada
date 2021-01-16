@@ -16,7 +16,7 @@ with GL.Types;                  use GL.Types; use GL.Types.Singles;
 
 with Glfw;
 with Glfw.Input;                use Glfw.Input;
-with Glfw.Windows;         
+with Glfw.Windows;
 with Glfw.Windows.Context;      use Glfw.Windows.Context;
 with Glfw.Windows.Hints;        use Glfw.Windows.Hints;
 
@@ -108,8 +108,6 @@ begin
       Fragment_Path : constant String := "../src/shaders/frag.glsl";
       use Ada.Directories;
    begin
-      pragma Assert (Exists (Vertex_Path),   "Couldn't find " & Vertex_Path);
-      pragma Assert (Exists (Fragment_Path), "Couldn't find " & Fragment_Path);
 
       Initialize_Id (GL_Program);
       Initialize_Id (Vertex_Shader);
@@ -189,16 +187,16 @@ begin
       Gameplay.Components.Render_Scale.Set     (Planets (I), 1.0);
    end loop;
 
-   ECS.Manager.Register_System 
+   ECS.Manager.Register_System
       (Name => "Tick_Position",
-       Proc         => Gameplay.Systems.Tick_Position'Access, 
-       Run_Interval => Frames (1), 
+       Proc         => Gameplay.Systems.Tick_Position'Access,
+       Run_Interval => Frames (1),
        Components   => ECS.Position & ECS.Velocity);
 
-   ECS.Manager.Register_System 
+   ECS.Manager.Register_System
       (Name => "Tick_Rotation",
-       Proc         => Gameplay.Systems.Tick_Rotation'Access, 
-       Run_Interval => Frames (1), 
+       Proc         => Gameplay.Systems.Tick_Rotation'Access,
+       Run_Interval => Frames (1),
        Components   => ECS.Rotation & ECS.Rotational_Speed);
 
    ECS.Manager.Register_System
@@ -206,7 +204,7 @@ begin
        Proc         => Gameplay.Systems.Tick_Object_Matrix'Access,
        Run_Interval => Frames (1),
        Components   => ECS.Position & ECS.Rotation & ECS.Render_Scale);
-   
+
    ECS.Manager.Register_System
       (Name => "Tick_CamObj_Matrix",
        Proc         => Gameplay.Systems.Tick_CamObj_Matrix'Access,
@@ -232,13 +230,13 @@ begin
 
    Uniforms.Projection.Initialise (GL_Program);
    --  There's a dedicated procedure for correctly updating the projection:
-   Globals.Window.Update_Projection; 
+   Globals.Window.Update_Projection;
 
    Uniforms.Camera_Transform.Initialise
      (GL_Program,
       Value => Look_At (Camera_Position => Globals.Camera_Position,
                         Target_Position =>
-                           (Gameplay.Player.Position + 
+                           (Gameplay.Player.Position +
                             Vector3'(Z => 2.0, others => 0.0)),
                         Up => (Y => 1.0, others => 0.0)));
 
@@ -304,7 +302,7 @@ begin
 
       if Frame_T0 > Globals.Next_Input_Poll_Time then
          Glfw.Input.Poll_Events;
-         Globals.Next_Input_Poll_Time := 
+         Globals.Next_Input_Poll_Time :=
             Globals.Next_Input_Poll_Time + Globals.Input_Poll_Interval;
       end if;
 
@@ -332,11 +330,11 @@ begin
          Uniforms.Camera_Transform.Set
             (Look_At (Camera_Position => (Player_Pos +
                                           Vector3'(0.0, 2.0, -2.0)),
-                      Target_Position => (Player_Pos + 
+                      Target_Position => (Player_Pos +
                                           Vector3'(0.0, 0.0, +2.0) +
                                           Gameplay.Player.Camera_Movement_Offset),
                       Up              => (Y => 1.0, others => 0.0)));
-         
+
          Gameplay.Player.Model.Render
             (E => Player_Entity);
 
@@ -361,21 +359,15 @@ begin
 
       Frame_T1 := Clock;
 
-      --  Put_Line (Util.Image (Frame_T1 - Frame_T0));
-      exit Game_Loop when (Frame_T1 - Globals.Program_Epoch) > Seconds (10);
-
       if Frame_T1 > Next_Frame_Time then
          declare
             Now : constant Time := Clock;
-            --  "Now" as a constant point in time, heh. It's not often in 
-            --  programming you get to get to be quite so explicit about 
-            --  ignoring physical reality. 
          begin
             Util.Log_Warning
                ("Missed frame deadline by "
                    & Util.Image (Frame_T1 - Next_Frame_Time)
-                   & ". (last happened " 
-                   & Util.Image (Now - Last_Frame_Deadline_Miss) 
+                   & ". (last happened "
+                   & Util.Image (Now - Last_Frame_Deadline_Miss)
                    & " ago)");
             Last_Frame_Deadline_Miss := Now;
          end;

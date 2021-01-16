@@ -6,80 +6,33 @@ with Cargame.Uniforms;
 
 package body Cargame.Gameplay is
 
-   --  procedure Register_Systems is
-   --     use Cargame.ECS;
-   --     use Cargame.ECS.Components;
-   --  begin
-
-   --     Register_System ((Proc       => Tick_Position'Access, 
-   --                       Run_Every  => Frames (1), 
-   --                       Components => Position & Velocity));
-
-   --     Register_System ((Proc       => Tick_Rotation'Access, 
-   --                       Run_Every  => Frames (1), 
-   --                       Components => Rotation & Rotational_Speed));
-
-   --     --  TODO: More ambitious conversions below.
-
-   --     --  Register_System (Render'Access,
-   --     --                   Run_Every  => Frames (1), 
-   --     --                   Components => Position & 
-   --     --                                 Rotation & 
-   --     --                                 Scale &
-   --     --                                 Vertex_Array & 
-   --     --                                 Vertex_Buffer & 
-   --     --                                 Element_Buffer &
-   --     --                                 Ambient_Light & 
-   --     --                                 Diffuse_Light & 
-   --     --                                 Specular_Light);
-
-   --     --  Register_System (Grab_Input'Access,
-   --     --                   Run_Every  => Frames (2), 
-   --     --                   Components => Keyboard & Mouse);
-
-   --  end Register_Systems;
-
    package body Systems is
       use ECS;
 
-      ---------------------
-      --  Tick_Position  --
-      ---------------------
-
-      procedure Tick_Position (E : in Entity) is
-         Pos :          Position_Type := Components.Position.Get (E);
-         Vel : constant Velocity_Type := Components.Velocity.Get (E);
+      procedure Run_All_Systems is
       begin
-         Pos := Pos + Vel;
-         Components.Position.Set (E, Pos);
-      end Tick_Position;
 
-      ---------------------
-      --  Tick_Rotation  --
-      ---------------------
+         Tick_Position :
+         for E of Union ((Position.Q, Velocity.Q)) loop
+            ECS.Position (E) := @ + ECS.Velocity (E);
+         end loop;
 
-      procedure Tick_Rotation (E : in Entity) is
-         Rot :          Radians := Components.Rotation.Get (E);
-         Spd : constant Radians := Components.Rotational_Speed.Get (E);
-      begin
-         Rot := Rot + Spd;
-         Components.Rotation.Set (E, Rot);
-      end Tick_Rotation;
+         Tick_Rotation :
+         for E of Union ((Rotation.Q, Rotational_Speed.Q)) loop
+            ECS.Rotation (E) := @ + ECS.Rotational_Speed (E);
+         end loop;
 
-      --------------------------
-      --  Tick_Object_Matrix  --
-      --------------------------
+         Tick_Object_Matrices :
+         for E of Union ((Position.Q, Render_Scale.Q, Rotation.Q)) loop
+            ECS.Object_Matrix (E) :=
+               Translate (Rotate (Scale (Identity4,
+                                         ECS.Render_Scale (E)),
+                                  ECS.Rotation (E)),
+                          ECS.Position (E));
+         end loop;
 
-      procedure Tick_Object_Matrix (E : in Entity) is
-         Pos : constant Position_Type := Components.Position.Get (E);
-         Scl : constant Single        := Components.Render_Scale.Get (E);
-         Rot : constant Radians       := Components.Rotation.Get (E);
 
-         Obj : constant Matrix4 := 
-            Translate (Rotate (Scale (Identity4, Scl), Rot), Pos);
-      begin
-         Components.Object_Matrix.Set (E, Obj);
-      end Tick_Object_Matrix;
+      end Run_All_Systems;
 
       --------------------------
       --  Tick_CamObj_Matrix  --
@@ -157,7 +110,7 @@ package body Cargame.Gameplay is
    --                    Count          => (Elm_Range.Last - Elm_Range.First));
 
    --     --  Unbind_VAO; --  Uncomment if borked.
-   --     
+   --
    --  end Render;
 
    ------------------------
@@ -166,7 +119,7 @@ package body Cargame.Gameplay is
 
    procedure Tick (T : in out Throttle_Control) is
    begin
-      T.Value := (if T.Is_Active 
+      T.Value := (if T.Is_Active
                   then Single'Min (Throttle_Amount'Last,  T.Value + T.Step)
                   else Single'Max (Throttle_Amount'First, T.Value - T.Step));
    end Tick;
@@ -198,14 +151,14 @@ package body Cargame.Gameplay is
          ---------------------
 
          declare
-            --  Mouse_Pos : constant Vector2 := 
+            --  Mouse_Pos : constant Vector2 :=
             --     Globals.Mouse.Normalised_Position_From_Centre;
 
-            X_Speed : constant Single := 
+            X_Speed : constant Single :=
                (Throttle (Strafe_Left).Value - Throttle (Strafe_Right).Value);
-            Y_Speed : constant Single := 
+            Y_Speed : constant Single :=
                (Throttle (Strafe_Up).Value - Throttle (Strafe_Down).Value);
-            Z_Speed : constant Single := 
+            Z_Speed : constant Single :=
                (Throttle (Accelerate).Value - Throttle (Decelerate).Value);
          begin
             --  TODO : Make throttle up and down push you on a vector depending
@@ -236,9 +189,9 @@ package body Cargame.Gameplay is
          --  Tick Rotation --
          ---------------------
 
-         Rotational_Velocity := 
-            Rotational_Velocity + 
-            0.001 * (Radians (Throttle (Yaw_Right).Value) - 
+         Rotational_Velocity :=
+            Rotational_Velocity +
+            0.001 * (Radians (Throttle (Yaw_Right).Value) -
                      Radians (Throttle (Yaw_Left).Value));
 
          Rotation := Rotation + Rotational_Velocity;
