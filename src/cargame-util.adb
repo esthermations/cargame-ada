@@ -10,9 +10,6 @@ with Cargame.Globals;
 
 package body Cargame.Util is
 
-   function Log_Task_Indent return String is
-      (Ada.Strings.Fixed."*" (1 * Num_Log_Tasks_Running, ' '));
-
    use Standard.Ascii;
 
    ANSI_Reset_Colours : constant String := ESC & "[39;49m";
@@ -86,7 +83,6 @@ package body Cargame.Util is
    begin
       Put_Line (Standard_Error,
                 "[Frame" & Globals.Frame_Number'Img & "]"
-                   & Log_Task_Indent
                    & Abbreviate_Context (Context)
                    & " " & Message);
    end Log;
@@ -103,45 +99,6 @@ package body Cargame.Util is
       Log (Message => "Got here: " & Where,
            Context => Context);
    end Got_Here;
-
-   ----------------------------------------------------------------------------
-   procedure Start
-      (LT      : in out Log_Task;
-       Message : in     String;
-       Context : in     String := GNAT.Source_Info.Enclosing_Entity)
-   is
-   begin
-      LT.Message := To_Unbounded_String (Message);
-      LT.Context := To_Unbounded_String (Context);
-      LT.Time_Started := Ada.Real_Time.Clock;
-      LT.Running := True;
-
-      Log (Message => Cyan ("Task started: ") & Message,
-           Context => Context);
-
-      Num_Log_Tasks_Running := Num_Log_Tasks_Running + 1;
-   end Start;
-
-   ----------------------------------------------------------------------------
-   procedure Complete (LT : in out Log_Task) is
-   begin
-      LT.Time_Stopped := Ada.Real_Time.Clock;
-      LT.Running := False;
-
-      Num_Log_Tasks_Running := Num_Log_Tasks_Running - 1;
-
-      Log (Message =>
-              Cyan ("Task completed in " & Time_Span_Image
-                       (LT.Time_Stopped - LT.Time_Started)),
-           Context => To_String (LT.Context));
-   end Complete;
-
-   ----------------------------------------------------------------------------
-   procedure Unbind_VAO is
-      use GL.Objects.Vertex_Arrays;
-   begin
-      Bind (Null_Array_Object);
-   end Unbind_VAO;
 
    ----------------------------------------------------------------------------
    function Time_Span_Image (TS : in Time_Span) return String is

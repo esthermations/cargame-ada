@@ -115,9 +115,9 @@ package Cargame.Types is
                      Angle : in     Radians;
                      Axis  : in     Vector3 := (Y => 1.0, others => 0.0));
 
-   function Rotate (Mtx   : in Matrix4; 
+   function Rotate (Mtx   : in Matrix4;
                     Angle : in Radians;
-                    Axis  : in Vector3 := (Y => 1.0, others => 0.0)) 
+                    Axis  : in Vector3 := (Y => 1.0, others => 0.0))
       return Matrix4;
 
    procedure Translate (Mtx : in out Matrix4; Change : Vector3);
@@ -139,10 +139,10 @@ package Cargame.Types is
    function Magnitude is new Cargame.Generic_Vector_Math.Generic_Magnitude
       (Index_Type => GL.Index_2D, Vec_Type => Vector2);
 
-   function Normalized is new Cargame.Generic_Vector_Math.Generic_Normalized 
-      (Index_Type => GL.Index_3D, Vec_Type => Vector3); 
+   function Normalized is new Cargame.Generic_Vector_Math.Generic_Normalized
+      (Index_Type => GL.Index_3D, Vec_Type => Vector3);
 
-   function Normalized is new Cargame.Generic_Vector_Math.Generic_Normalized 
+   function Normalized is new Cargame.Generic_Vector_Math.Generic_Normalized
       (Index_Type => GL.Index_2D, Vec_Type => Vector2);
 
    function Mat4_To_Mat3 (M : in Matrix4) return Matrix3 is
@@ -201,14 +201,14 @@ package Cargame.Types is
       (M.First_Index + M.Num_Indices);
 
    function "=" (L, R : in Material) return Boolean is
-      (L.Name = R.Name and then 
-       L.Ambient_Light           = R.Ambient_Light and then 
-       L.Diffuse_Light           = R.Diffuse_Light and then 
-       L.Specular_Light          = R.Specular_Light and then 
-       L.First_Index             = R.First_Index and then 
-       L.Num_Indices             = R.Num_Indices and then 
-       L.Diffuse_Texture.Raw_Id  = R.Diffuse_Texture.Raw_Id and then 
-       L.Specular_Texture.Raw_Id = R.Diffuse_Texture.Raw_Id and then 
+      (L.Name = R.Name and then
+       L.Ambient_Light           = R.Ambient_Light and then
+       L.Diffuse_Light           = R.Diffuse_Light and then
+       L.Specular_Light          = R.Specular_Light and then
+       L.First_Index             = R.First_Index and then
+       L.Num_Indices             = R.Num_Indices and then
+       L.Diffuse_Texture.Raw_Id  = R.Diffuse_Texture.Raw_Id and then
+       L.Specular_Texture.Raw_Id = R.Diffuse_Texture.Raw_Id and then
        L.Shininess               = R.Shininess);
 
    Default_Material : Material;
@@ -226,12 +226,11 @@ package Cargame.Types is
 
    use Ada.Containers;
    function Hash (C : Face_Component) return Hash_Type
-      --  We need to encode 3 integers into a 64-bit hash type, so
-      --  each gets 21 bits to work with. If this precondition fails,
-      --  we're guaranteed to have hash collisions.
       with Pre => (Hash_Type'Size = 64 and then
                    C.V < 2#0001_1111_1111_1111_1111_1111# and then
                    C.N < 2#0001_1111_1111_1111_1111_1111# and then
                    C.T < 2#0001_1111_1111_1111_1111_1111#);
+   --  We need to smoosh 3 integers into a 64-bit hash type, so each gets 21
+   --  bits to work with. If this precondition fails, we have a hash collision.
 
 end Cargame.Types;

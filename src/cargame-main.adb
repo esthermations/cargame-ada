@@ -37,12 +37,6 @@ procedure Cargame.Main is
    Frame_T0 : Time;
    Frame_T1 : Time;
 
-   --  Top_Score : Single := 0.0;
-
-   Log_Task : Util.Log_Task;
-
-   Last_Frame_Deadline_Miss : Time := Clock;
-
    Asteroids : array (1 .. 1000) of ECS.Entity;
 
    Float_Generator : Ada.Numerics.Float_Random.Generator;
@@ -149,97 +143,46 @@ begin
    --  Initialise entities  --
    ---------------------------
 
-   Log_Task.Start ("Initialising entities.");
-
    Player_Model   := Create_Model_From_Obj ("../src/models/Barrel02.obj");
    Asteroid_Model := Create_Model_From_Obj ("../src/models/Barrel02.obj");
 
-   Player_Entity := ECS.Manager.New_Entity;
-   Util.Log ("Player_Entity = " & Player_Entity'Img);
-   ECS.Manager.Add_Component (Player_Entity, ECS.Player);
-   ECS.Manager.Add_Component (Player_Entity, ECS.Position);
-   ECS.Manager.Add_Component (Player_Entity, ECS.Model);
-   ECS.Manager.Add_Component (Player_Entity, ECS.Rotation);
-   ECS.Manager.Add_Component (Player_Entity, ECS.Velocity);
-   ECS.Manager.Add_Component (Player_Entity, ECS.Acceleration);
-   ECS.Manager.Add_Component (Player_Entity, ECS.Render_Scale);
-   ECS.Manager.Add_Component (Player_Entity, ECS.Object_Matrix);
-   ECS.Manager.Add_Component (Player_Entity, ECS.CamObj_Matrix);
-   ECS.Manager.Add_Component (Player_Entity, ECS.Normal_Matrix);
-
-   Gameplay.Components.Position.Set     (Player_Entity, (0.0, 0.0, 0.0));
-   Gameplay.Components.Model.Set        (Player_Entity, Player_Model);
-   Gameplay.Components.Velocity.Set     (Player_Entity, (0.0, 0.0, 0.0));
-   Gameplay.Components.Acceleration.Set (Player_Entity, (0.0, 0.0, 0.0));
-   Gameplay.Components.Rotation.Set     (Player_Entity, Radians (0.0));
-   Gameplay.Components.Render_Scale.Set (Player_Entity, 10.0);
+   Player := ECS.New_Entity;
+   ECS.Controlled_By_Player.Set (Player, True);
+   ECS.Position.Set             (Player, (others => 0.0));
+   ECS.Velocity.Set             (Player, (others => 0.0));
+   ECS.Acceleration.Set         (Player, (others => 0.0));
+   ECS.Render_Scale.Set         (Player, 10.0);
+   ECS.Object_Matrix.Set        (Player, Identity4);
+   ECS.CamObj_Matrix.Set        (Player, Identity4);
+   ECS.Normal_Matrix.Set        (Player, Identity3);
+   ECS.Model.Set                (Player, Player_Model);
+   ECS.Rotation.Set             (Player, Radians (0.0));
 
    for I in Asteroids'Range loop
       Asteroids (I) := ECS.Manager.New_Entity;
-      Util.Log ("Making planet " & I'Img & " = " & Asteroids (I)'Img);
-      ECS.Manager.Add_Component (Asteroids (I), ECS.Position);
-      ECS.Manager.Add_Component (Asteroids (I), ECS.Rotation);
-      ECS.Manager.Add_Component (Asteroids (I), ECS.Model);
-      ECS.Manager.Add_Component (Asteroids (I), ECS.Rotational_Speed);
-      ECS.Manager.Add_Component (Asteroids (I), ECS.Render_Scale);
-      ECS.Manager.Add_Component (Asteroids (I), ECS.Object_Matrix);
-      ECS.Manager.Add_Component (Asteroids (I), ECS.CamObj_Matrix);
-      ECS.Manager.Add_Component (Asteroids (I), ECS.Normal_Matrix);
+
+      -- Position is set below
+
+      ECS.Rotation.Set         (Asteroids (I), Radians (0.0));
+      ECS.Model.Set            (Asteroids (I), Asteroid_Model);
+      ECS.Rotational_Speed.Set (Asteroids (I), Radians (if I mod 2 = 0 then 1 else (-1)) * Radians (0.01));
+      ECS.Render_Scale.Set     (Asteroids (I), 10.0);
+
+      ECS.Object_Matrix.Set    (Asteroids (I), Identity4);
+      ECS.CamObj_Matrix.Set    (Asteroids (I), Identity4);
+      ECS.Normal_Matrix.Set    (Asteroids (I), Identity3);
 
       declare
          package R renames Ada.Numerics.Float_Random;
          Position : Position_Type;
          Factor : constant Single := 50.0;
       begin
-         Position (X) := Factor * Single (R.Random(Float_Generator) - 0.5);
-         Position (Y) := Factor * Single (R.Random(Float_Generator) - 0.5);
-         Position (Z) := Factor * Single (R.Random(Float_Generator) - 0.5);
-         Gameplay.Components.Position.Set (Asteroids (I), Position);
+         Position (X) := Factor * Single (R.Random (Float_Generator) - 0.5);
+         Position (Y) := Factor * Single (R.Random (Float_Generator) - 0.5);
+         Position (Z) := Factor * Single (R.Random (Float_Generator) - 0.5);
+         ECS.Position.Set (Asteroids (I), Position);
       end;
-
-      Gameplay.Components.Model.Set            (Asteroids (I), Asteroid_Model);
-      Gameplay.Components.Rotation.Set         (Asteroids (I), Radians (0.0));
-      Gameplay.Components.Rotational_Speed.Set (Asteroids (I), Radians (if I mod 2 = 0 then 1 else (-1)) * Radians (0.01));
-      Gameplay.Components.Render_Scale.Set     (Asteroids (I), 10.0);
-   end loop;
-
-   ECS.Manager.Register_System
-      (Name => "Tick_Position",
-       Proc         => Gameplay.Systems.Tick_Position'Access,
-       Run_Interval => Frames (1),
-       Components   => ECS.Position & ECS.Velocity);
-
-   ECS.Manager.Register_System
-      (Name => "Tick_Rotation",
-       Proc         => Gameplay.Systems.Tick_Rotation'Access,
-       Run_Interval => Frames (1),
-       Components   => ECS.Rotation & ECS.Rotational_Speed);
-
-   ECS.Manager.Register_System
-      (Name => "Tick_Object_Matrix",
-       Proc         => Gameplay.Systems.Tick_Object_Matrix'Access,
-       Run_Interval => Frames (1),
-       Components   => ECS.Position & ECS.Rotation & ECS.Render_Scale);
-
-   ECS.Manager.Register_System
-      (Name => "Tick_CamObj_Matrix",
-       Proc         => Gameplay.Systems.Tick_CamObj_Matrix'Access,
-       Run_Interval => Frames (1),
-       Components   => +ECS.Object_Matrix);
-
-   ECS.Manager.Register_System
-      (Name => "Tick_Normal_Matrix",
-       Proc         => Gameplay.Systems.Tick_Normal_Matrix'Access,
-       Run_Interval => Frames (1),
-       Components   => +ECS.CamObj_Matrix);
-
-   ECS.Manager.Register_System
-      (Name => "Render",
-       Proc         => Gameplay.Systems.Render'Access,
-       Run_Interval => Frames (1),
-       Components   => ECS.Model & ECS.CamObj_Matrix & ECS.Normal_Matrix);
-
-   Log_Task.Complete;
+  end loop;
 
    ---------------------------
    --  Initialise uniforms  --
@@ -247,17 +190,14 @@ begin
 
    Util.Log ("Initialising uniforms.");
 
-   Uniforms.Projection.Initialise (GL_Program);
-   --  There's a dedicated procedure for correctly updating the projection:
-   Globals.Window.Update_Projection;
+   Uniforms.Projection.Initialise
+      (GL_Program, Globals.Window.Calculate_Projection);
 
    Uniforms.Camera_Transform.Initialise
      (GL_Program,
-      Value => Look_At (Camera_Position => Globals.Camera_Position,
-                        Target_Position =>
-                           (Gameplay.Player.Position +
-                            Vector3'(Z => 2.0, others => 0.0)),
-                        Up => (Y => 1.0, others => 0.0)));
+      Look_At (Camera_Position => Globals.Camera_Position,
+               Target_Position => Origin,
+               Up              => (0.0, 1.0, 0.0)));
 
    Uniforms.Object_Transform.Initialise (GL_Program, Identity4);
    Uniforms.CamObj_Transform.Initialise (GL_Program, Identity4);
@@ -301,8 +241,6 @@ begin
    --  Main game loop  --
    ----------------------
 
-   Log_Task.Start ("Entering game loop.");
-
    Util.Log ("Frame deadline is " & Util.Image (Globals.Frame_Interval));
 
    Game_Loop :
@@ -312,28 +250,18 @@ begin
       -- Set deadlines --
       -------------------
 
-      --  For timing accuracy, evaluating Clock should be the first thing done
-      --  every frame.
       Frame_T0 := Clock;
       Next_Frame_Time := Frame_T0 + Frame_Interval;
       Globals.Current_Frame := @ + 1;
-
-      if Frame_T0 > Globals.Next_Input_Poll_Time then
-         Glfw.Input.Poll_Events;
-         Globals.Next_Input_Poll_Time :=
-            Globals.Next_Input_Poll_Time + Globals.Input_Poll_Interval;
-      end if;
 
       -----------------------
       --  Gameplay update  --
       -----------------------
 
-      Globals.Frame_Number := Globals.Frame_Number + 1;
+      Globals.Frame_Number := @ + 1;
 
-      -- Gameplay.Player.Tick;
-      -- Gameplay.Planet.Tick;
-
-      ECS.Manager.Run_Systems;
+      Glfw.Input.Poll_Events;
+      Gameplay.Run_All_Systems;
 
       --------------
       --  Render  --
@@ -342,8 +270,8 @@ begin
       Clear (Buffer_Bits'(Depth => True, Color => True, others => <>));
 
       declare
-         Pos : constant Position_Type := Gameplay.Components.Position.Get (Player_Entity);
-         Vel : constant Velocity_Type := Gameplay.Components.Velocity.Get (Player_Entity);
+         Pos : constant Position_Type := ECS.Position.Get (Player);
+         Vel : constant Velocity_Type := ECS.Velocity.Get (Player);
 
          function Camera_Offset return Position_Type is (Position_Type (Vel));
       begin
@@ -355,22 +283,9 @@ begin
                                           Gameplay.Player.Camera_Movement_Offset),
                       Up              => (Y => 1.0, others => 0.0)));
 
-         Gameplay.Player.Model.Render
-            (E => Player_Entity);
-
+         Gameplay.Player.Model.Render (Player);
       end;
 
-      ------------------
-      --  Run Systems --
-      ------------------
-
-      Glfw.Input.Poll_Events;
-
-      Clear (Buffer_Bits'(Depth => True, Color => True, others => <>));
-
-      ECS.Manager.Run_Systems;
-
-      --GL.Flush;
       Swap_Buffers (Globals.Window.Ptr);
 
       -----------------------------
@@ -380,17 +295,8 @@ begin
       Frame_T1 := Clock;
 
       if Frame_T1 > Next_Frame_Time then
-         declare
-            Now : constant Time := Clock;
-         begin
-            Util.Log_Warning
-               ("Missed frame deadline by "
-                   & Util.Image (Frame_T1 - Next_Frame_Time)
-                   & ". (last happened "
-                   & Util.Image (Now - Last_Frame_Deadline_Miss)
-                   & " ago)");
-            Last_Frame_Deadline_Miss := Now;
-         end;
+         Util.Log_Warning ("Missed frame deadline by " &
+                           Util.Image (Frame_T1 - Next_Frame_Time));
       end if;
 
       -------------
@@ -401,11 +307,9 @@ begin
 
    end loop Game_Loop;
 
-   Log_Task.Complete;
-
    Globals.Window.Destroy (Globals.Window.Ptr);
-   Put_Line ("Thanks for playing!");
-
    Glfw.Shutdown;
+
+   Put_Line ("Thanks for playing!");
 
 end Cargame.Main;

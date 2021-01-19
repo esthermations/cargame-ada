@@ -11,3 +11,5 @@
 *.stderr
 obj/*
 .vscode
+bin/cargame-main
+default.cgpr

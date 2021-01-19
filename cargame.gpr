@@ -7,10 +7,12 @@ with "gnatcoll";
 project Cargame is
 
   for Languages   use ("ada", "c");
+  for Source_Dirs use ("src");
   for Object_Dir  use "obj";
   for Exec_Dir    use "bin";
-  for Source_Dirs use ("src");
-  for Main        use ("cargame-main");
+  for Main        use ("cargame-main.adb");
+
+  for Create_Missing_Dirs use "True";
 
   type OS is ("Linux", "Darwin", "Windows_NT");
 
@@ -21,7 +23,16 @@ project Cargame is
   end Compiler;
 
   package Linker is
-    for Default_Switches ("Ada") use ("-Lobj");
+    for Default_Switches ("Ada") use
+      ("-Lobj",
+       "-gnatwa",   --  All warnings
+       "-gnatVa",   --  All validity checks
+       "-gnatwe",   --  Warnings are errors
+       "-gnatyg",   --  Style checks (GNAT style)
+       "-gnatmy80", --  Limit lines to 80 columns
+       "-gnatyO",   --  Overriding subprograms must be marked as such
+       "-gnata",    --  Enable assertions and contract checks
+       );
   end Linker;
 
 end Cargame;

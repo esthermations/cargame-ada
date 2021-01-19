@@ -60,7 +60,7 @@ package body Cargame.Obj_Parser is
             end if;
          end loop;
 
-         Line_Is_Significant := 
+         Line_Is_Significant :=
             Line.Length > 0 and
             Line (1) /= '#' and
             not (for all C of Line => Is_Space (C) or Is_Control (C));
@@ -81,7 +81,6 @@ package body Cargame.Obj_Parser is
    -------------
 
    function Parse (File_Path : in String) return Obj_Data is
-
       Ret : Obj_Data; --  Return value
 
       --  Unique vertices as specified in the obj file, irrespective of faces.
@@ -101,17 +100,12 @@ package body Cargame.Obj_Parser is
       Obj_File              : File_Type;
       Current_Material_Name : Material_Name;
       Original_Directory    : constant String := Current_Directory;
-
-      Log_Task : Util.Log_Task;
-
    begin
       Set_Directory (Containing_Directory (File_Path));
 
       Open (File => Obj_File,
             Mode => In_File,
             Name => Simple_Name (File_Path));
-
-      Log_Task.Start ("Parsing obj file: " & File_Path);
 
       Loop_Over_Obj_Lines :
       loop
@@ -120,9 +114,9 @@ package body Cargame.Obj_Parser is
 
          exit Loop_Over_Obj_Lines when End_Of_File (Obj_File);
 
-         Line.Split (Sep => " ", 
-                     Omit_Empty => True, 
-                     Into => Split_Line, 
+         Line.Split (Sep => " ",
+                     Omit_Empty => True,
+                     Into => Split_Line,
                      Last => Split_Last);
 
          pragma Assert (Split_Line'Length >= 1);
@@ -142,7 +136,7 @@ package body Cargame.Obj_Parser is
                   subtype UN_Range is GL.Types.Size range UN.First_Index .. UN.Last_Index;
                   subtype UT_Range is GL.Types.Size range UT.First_Index .. UT.Last_Index;
 
-                  Original_Face : constant Face := 
+                  Original_Face : constant Face :=
                      Get_Face (Split_Line (Split_Line'First .. Split_Last));
 
                   F : constant Face := Convert_Into_Triangles (Original_Face);
@@ -163,12 +157,12 @@ package body Cargame.Obj_Parser is
                      --  values we've grabbed from the obj file. If we don't
                      --  throw here, we'll get a Constraint_Error when we try
                      --  using these values to index Unique_* in a moment.
-                     if FC.V not in UV_Range or 
-                        FC.N not in UN_Range or 
+                     if FC.V not in UV_Range or
+                        FC.N not in UN_Range or
                         (Ret.Has_TexCrds and then FC.T not in UT_Range)
                      then
-                        raise Invalid_Obj_Data 
-                           with "Face component specified an invalid index:" 
+                        raise Invalid_Obj_Data
+                           with "Face component specified an invalid index:"
                               & Line.To_String;
                      end if;
 
@@ -190,7 +184,7 @@ package body Cargame.Obj_Parser is
 
                Handle_UseMtl :
                declare
-                  UseMtl_Name : constant Material_Name := 
+                  UseMtl_Name : constant Material_Name :=
                      To_Material_Name (To_String (Split_Line (2)));
                begin
 
@@ -243,17 +237,12 @@ package body Cargame.Obj_Parser is
          end if;
       end loop;
 
-      Log_Task.Complete;
-
       return Ret;
-
    exception
-
       when E : others =>
          Util.Log_Error ("Failed to parse obj file: " & File_Path);
          Util.Log_Warning (Ada.Exceptions.Exception_Message (E));
          raise;
-
    end Parse;
 
    ---------------------------------------------------------------------------

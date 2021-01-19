@@ -15,8 +15,9 @@ package body Cargame.Globals is
    function Rendering_Context_Initialised return Boolean is
       (Globals.Window.Object.Initialized and Globals.GL_Program.Initialized);
 
-   ----------------------------------------------------------------------------
-   --  Window 
+   --------------
+   --  Window  --
+   --------------
 
    package body Window is
 
@@ -27,22 +28,19 @@ package body Cargame.Globals is
                              Action   : Glfw.Input.Keys.Action;
                              Mods     : Glfw.Input.Keys.Modifiers)
       is
-         pragma Unreferenced (Scancode, Mods); 
+         pragma Unreferenced (Scancode, Mods);
 
          use Glfw.Input.Keys;
          use Cargame.Gameplay.Controls;
-
-         pragma Assert (Object = Globals.Window.Ptr,
-                        "Received input from a non-main window?");
 
          --  Two things called "Action" here, so...
          Game_Action : constant Any_Control_Action := Key_To_Action (Key);
          Key_Action  : Glfw.Input.Keys.Action renames Action;
       begin
          if Game_Action in Player_Action then
-            Gameplay.Controls.Player_Is_Requesting_Action (Game_Action) := 
+            Gameplay.Controls.Player_Is_Requesting_Action (Game_Action) :=
                (if Key_Action in Press | Repeat then True else False);
-         else 
+         else
             case Game_Action is
                when Quit => Globals.Window.Object.Set_Should_Close (True);
                when others => null;
@@ -56,16 +54,10 @@ package body Cargame.Globals is
       is
          pragma Unreferenced (Object);
       begin
-         Util.Log ("Window resized to: " 
-                      & Natural'Image (Width) & " x " & Natural'Image (Height)
-                      & " (aspect: " & Single'Image (Aspect_Ratio) & ")");
-
          Globals.Window.Width  := Glfw.Size (Width);
          Globals.Window.Height := Glfw.Size (Height);
-
-         Window.Update_Projection;
+         Uniforms.Projection.Set (Calculate_Projection);
          GL.Window.Set_Viewport (0, 0, Int (Width), Int (Height));
-
       end Size_Changed;
 
       -------------------------------------------------------------------------
@@ -91,27 +83,29 @@ package body Cargame.Globals is
          Globals.Mouse.Button_States (Button) := State;
       end Mouse_Button_Changed;
 
-      -------------------------------------------------------------------------
-      procedure Update_Projection is
+      function Calculate_Projection return Matrix4 is
       begin
-         Uniforms.Projection.Set
-            (Types.Perspective_Matrix
-                (View_Angle   => Types.Degrees (Globals.Vertical_FoV),
-                 Aspect_Ratio => Window.Aspect_Ratio,
-                 Near         => Globals.Near_Plane,
-                 Far          => Globals.Far_Plane));
-      end Update_Projection;
+         return Types.Perspective_Matrix
+            (View_Angle   => Types.Degrees (Globals.Vertical_FoV),
+             Aspect_Ratio => Window.Aspect_Ratio,
+             Near         => Globals.Near_Plane,
+             Far          => Globals.Far_Plane);
+      end Calculate_Projection;
 
    end Window;
+
+   -------------
+   --  Mouse  --
+   -------------
 
    package body Mouse is
 
       function Normalised_Position_From_Centre return Vector2 is
          Pos : constant Vector2 := Mouse.Position;
-         Half_Screen_Width : constant Single := (Single (Window.Width) / 2.0);
+         Half_Screen_Width  : constant Single := (Single (Window.Width ) / 2.0);
          Half_Screen_Height : constant Single := (Single (Window.Height) / 2.0);
-         Ret : constant Vector2 := 
-            (GL.X => (Pos (GL.X) - Half_Screen_Width) / Half_Screen_Width,
+         Ret : constant Vector2 :=
+            (GL.X => (Pos (GL.X) - Half_Screen_Width ) / Half_Screen_Width,
              GL.Y => (Pos (GL.Y) - Half_Screen_Height) / Half_Screen_Height);
       begin
          return Ret;

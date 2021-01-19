@@ -10,12 +10,10 @@ package Cargame.Util is
    use Ada.Strings.Unbounded;
 
    function Time_Span_Image (TS : in Time_Span) return String;
-   function Image (TS : in Time_Span) return String is (Time_Span_Image (TS));
+   function Image (TS : in Time_Span) return String renames Time_Span_Image;
 
    Int_To_Index : constant array (Integer range 1 .. 4) of Index_Homogeneous :=
       (X, Y, Z, W);
-
-   procedure Unbind_VAO;
 
    --------------------
    --  Text colours  --
@@ -52,31 +50,5 @@ package Cargame.Util is
    procedure Got_Here
       (Where   : in String := GNAT.Source_Info.Source_Location;
        Context : in String := GNAT.Source_Info.Enclosing_Entity);
-
-   Num_Log_Tasks_Running : Natural := 0;
-
-   type Log_Task is tagged limited record
-      Message : Unbounded_String;
-      Context : Unbounded_String;
-      Running : Boolean := False;
-      Time_Started : Time;
-      Time_Stopped : Time;
-   end record;
-
-   procedure Start 
-      (LT      : in out Log_Task; 
-       Message : in     String; 
-       Context : in     String := GNAT.Source_Info.Enclosing_Entity)
-      with Pre  => not LT.Running and
-                   Num_Log_Tasks_Running /= Natural'Last,
-           Post => LT.Running and
-                   Num_Log_Tasks_Running = Num_Log_Tasks_Running'Old + 1;
-
-   procedure Complete (LT : in out Log_Task)
-      with Pre  => LT.Running and 
-                   Num_Log_Tasks_Running /= 0,
-           Post => not LT.Running and
-                   Num_Log_Tasks_Running = Num_Log_Tasks_Running'Old - 1;
-
 
 end Cargame.Util;

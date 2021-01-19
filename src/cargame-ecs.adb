@@ -49,6 +49,7 @@ package body Cargame.ECS is
                end if;
             end loop;
 
+            pragma Assert (Idx = Num_Entities);
             return Ret;
          end;
       end Query;

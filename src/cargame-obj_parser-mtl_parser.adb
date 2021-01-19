@@ -30,15 +30,11 @@ package body Cargame.Obj_Parser.Mtl_Parser is
       Output_Materials : Vector_Of_Material;
       Current_Material : Material;
       First_Material   : Boolean := True;
-
-      Log_Task : Util.Log_Task;
    begin
 
       Open (File => Mtl_File,
             Mode => In_File,
             Name => Mtl_File_Path);
-
-      Log_Task.Start ("Parsing mtl file: " & Mtl_File_Path);
 
       Loop_Over_Mtl_Lines :
       while not End_Of_File (Mtl_File) loop
@@ -124,8 +120,6 @@ package body Cargame.Obj_Parser.Mtl_Parser is
             Util.Log_Warning (M.Printable_Name & " has no texture.");
          end if;
       end loop;
-
-      Log_Task.Complete;
 
       Close (Mtl_File);
 

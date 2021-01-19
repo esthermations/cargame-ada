@@ -32,7 +32,7 @@ package Cargame.Globals is
    Program_Epoch          : Time               := Clock;
    Next_Frame_Time        : Time               := Clock;
    Target_FPS             : constant Frames    := Frames (120);
-   Frame_Interval         : constant Time_Span := 
+   Frame_Interval         : constant Time_Span :=
       (Seconds (1) / Positive (Target_FPS));
 
    Current_Frame : Frame := Frames'First;
@@ -45,12 +45,12 @@ package Cargame.Globals is
    ----------------------------------------------------------------------------
    --  Rendering state
 
-   Background_Colour : constant Color := 
+   Background_Colour : constant Color :=
       (R => 0.1, G => 0.4, B => 0.4, A => 1.0);
 
-   Vertical_FoV      : Single                       := 60.0; 
+   Vertical_FoV      : Single                       := 60.0;
    --  Actually degrees, but Degrees is defined in Cargame.Types and that'd be a
-   --  circular dependency... I do miss D's forward references and lack of 
+   --  circular dependency... I do miss D's forward references and lack of
    --  header files sometimes.
 
    GL_Program        : GL.Objects.Programs.Program;
@@ -105,7 +105,7 @@ package Cargame.Globals is
       function Aspect_Ratio return Single is
          (Single (Width) / Single (Height)) with Inline;
 
-      procedure Update_Projection;
+      function Calculate_Projection return Matrix4;
 
    end Window;
 
@@ -117,7 +117,7 @@ package Cargame.Globals is
       Button_States : array (Glfw.Input.Mouse.Button) of Button_State :=
          (others => Released);
 
-      function Position return Vector2 is 
+      function Position return Vector2 is
          (Vector2'(GL.X => Single (X), GL.Y => Single (Y)));
 
       function Normalised_Position_From_Centre return Vector2;
