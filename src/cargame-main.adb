@@ -8,8 +8,6 @@ with GL;                        use GL;
 with GL.Buffers;                use GL.Buffers;
 with GL.Files;
 with GL.Objects.Programs;       use GL.Objects.Programs;
-with GL.Objects.Vertex_Arrays;  use GL.Objects.Vertex_Arrays;
-with GL.Objects.Buffers;        use GL.Objects.Buffers;
 with GL.Objects.Shaders;        use GL.Objects.Shaders;
 with GL.Objects.Textures;
 with GL.Toggles;
@@ -25,23 +23,24 @@ with Cargame.Globals;           use Cargame.Globals;
 with Cargame.Models;            use Cargame.Models;
 with Cargame.Types;             use Cargame.Types;
 with Cargame.Uniforms;
-with Cargame.Gameplay;          use Cargame.Gameplay;
 with Cargame.Util;
-with Cargame.Texture_Loader;
 with Cargame.ECS;
 
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 procedure Cargame.Main is
 
    Frame_T0 : Time;
    Frame_T1 : Time;
 
+   Player : ECS.Entity;
+
+   Player_Model   : Model;
+   Asteroid_Model : Model;
+
    Asteroids : array (1 .. 1000) of ECS.Entity;
 
    Float_Generator : Ada.Numerics.Float_Random.Generator;
-
-   use all type ECS.Enabled_Components;
 
 begin
 
@@ -99,7 +98,6 @@ begin
 
       Vertex_Path   : constant String := "../src/shaders/vert.glsl";
       Fragment_Path : constant String := "../src/shaders/frag.glsl";
-      use Ada.Directories;
    begin
 
       Initialize_Id (GL_Program);
@@ -159,22 +157,12 @@ begin
    ECS.Rotation.Set             (Player, Radians (0.0));
 
    for I in Asteroids'Range loop
-      Asteroids (I) := ECS.Manager.New_Entity;
+      Asteroids (I) := ECS.New_Entity;
 
-      -- Position is set below
-
-      ECS.Rotation.Set         (Asteroids (I), Radians (0.0));
-      ECS.Model.Set            (Asteroids (I), Asteroid_Model);
-      ECS.Rotational_Speed.Set (Asteroids (I), Radians (if I mod 2 = 0 then 1 else (-1)) * Radians (0.01));
-      ECS.Render_Scale.Set     (Asteroids (I), 10.0);
-
-      ECS.Object_Matrix.Set    (Asteroids (I), Identity4);
-      ECS.CamObj_Matrix.Set    (Asteroids (I), Identity4);
-      ECS.Normal_Matrix.Set    (Asteroids (I), Identity3);
-
+      --  Set position
       declare
          package R renames Ada.Numerics.Float_Random;
-         Position : Position_Type;
+         Position : Valid_Vector3;
          Factor : constant Single := 50.0;
       begin
          Position (X) := Factor * Single (R.Random (Float_Generator) - 0.5);
@@ -182,7 +170,16 @@ begin
          Position (Z) := Factor * Single (R.Random (Float_Generator) - 0.5);
          ECS.Position.Set (Asteroids (I), Position);
       end;
-  end loop;
+
+      --  Set everything else
+      ECS.Rotation.Set         (Asteroids (I), Radians (0.0));
+      ECS.Model.Set            (Asteroids (I), Asteroid_Model);
+      ECS.Rotational_Speed.Set (Asteroids (I), Radians (0.01));
+      ECS.Render_Scale.Set     (Asteroids (I), 10.0);
+      ECS.Object_Matrix.Set    (Asteroids (I), Identity4);
+      ECS.CamObj_Matrix.Set    (Asteroids (I), Identity4);
+      ECS.Normal_Matrix.Set    (Asteroids (I), Identity3);
+   end loop;
 
    ---------------------------
    --  Initialise uniforms  --
@@ -206,37 +203,6 @@ begin
    Uniforms.Diffuse_Map.Initialise  (GL_Program, Globals.Diffuse_Map_ID);
    Uniforms.Specular_Map.Initialise (GL_Program, Globals.Specular_Map_ID);
 
-   Uniforms.Material_Ambient.Initialise   (GL_Program);
-   Uniforms.Material_Shininess.Initialise (GL_Program);
-   Uniforms.Light_Position.Initialise     (GL_Program, Initial_Player_Position);
-   Uniforms.Light_Ambient.Initialise      (GL_Program, (others => 1.0));
-   Uniforms.Light_Diffuse.Initialise      (GL_Program, (others => 1.0));
-   --  Uniforms.Light_Specular.Initialise     (GL_Program);
-
-   -----------------------------------
-   --  Initialise default material  --
-   -----------------------------------
-
-   --  TODO(2019-02-04): There's related code in cargame-models.adb for
-   --  applying this material. Ensure there's no overlap, and maybe tidy these
-   --  two up.
-
-   Util.Log ("Loading default material.");
-
-   Set_Default_Material :
-   declare
-   begin
-      Default_Texture := Texture_Loader.Load_Texture
-         ("../src/models/default_texture.png");
-      pragma Assert (Default_Texture.Initialized);
-
-      Default_Material :=
-         (Name             => To_Material_Name ("Default material"),
-          Diffuse_Texture  => Default_Texture,
-          Specular_Texture => Default_Texture,
-          others           => <>);
-   end Set_Default_Material;
-
    ----------------------
    --  Main game loop  --
    ----------------------
@@ -252,7 +218,7 @@ begin
 
       Frame_T0 := Clock;
       Next_Frame_Time := Frame_T0 + Frame_Interval;
-      Globals.Current_Frame := @ + 1;
+      Globals.Frame_Number := @ + 1;
 
       -----------------------
       --  Gameplay update  --
@@ -261,29 +227,23 @@ begin
       Globals.Frame_Number := @ + 1;
 
       Glfw.Input.Poll_Events;
-      Gameplay.Run_All_Systems;
+      ECS.Systems.Run_All_Systems;
 
       --------------
       --  Render  --
       --------------
 
+      --  TODO: Move all uniform updates to systems.
+
       Clear (Buffer_Bits'(Depth => True, Color => True, others => <>));
 
       declare
-         Pos : constant Position_Type := ECS.Position.Get (Player);
-         Vel : constant Velocity_Type := ECS.Velocity.Get (Player);
-
-         function Camera_Offset return Position_Type is (Position_Type (Vel));
+         Pos : constant Valid_Vector3 := ECS.Position.Value (Player);
       begin
          Uniforms.Camera_Transform.Set
-            (Look_At (Camera_Position => (Player_Pos +
-                                          Vector3'(0.0, 2.0, -2.0)),
-                      Target_Position => (Player_Pos +
-                                          Vector3'(0.0, 0.0, +2.0) +
-                                          Gameplay.Player.Camera_Movement_Offset),
+            (Look_At (Camera_Position => (Pos + Vector3'(0.0, 2.0, -2.0)),
+                      Target_Position => (Pos + Vector3'(0.0, 0.0, +2.0)),
                       Up              => (Y => 1.0, others => 0.0)));
-
-         Gameplay.Player.Model.Render (Player);
       end;
 
       Swap_Buffers (Globals.Window.Ptr);

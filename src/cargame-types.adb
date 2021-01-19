@@ -51,8 +51,8 @@ package body Cargame.Types is
 
    ----------------------------------------------------------------------------
    --  Abridged from OpenGLAda/examples/common/src/maths.adb.
-   procedure Look_At (Camera_Position, Target_Position : in     Position_Type;
-                      Up                               : in     Distance_Type;
+   procedure Look_At (Camera_Position, Target_Position : in     Valid_Vector3;
+                      Up                               : in     Valid_Vector3;
                       Mtx                              :    out Matrix4)
    is
       Forward : constant Vector3 := Normalized (Camera_Position - Target_Position);
@@ -70,8 +70,8 @@ package body Cargame.Types is
    end Look_At;
 
    ----------------------------------------------------------------------------
-   function Look_At (Camera_Position, Target_Position : in Position_Type;
-                     Up                               : in Distance_Type)
+   function Look_At (Camera_Position, Target_Position : in Valid_Vector3;
+                     Up                               : in Valid_Vector3)
       return Matrix4
    is
    begin
@@ -144,10 +144,10 @@ package body Cargame.Types is
    end Rotate;
 
    ----------------------------------------------------------------------------
-   function Rotate (Mtx   : in Matrix4; 
-                    Angle : in Radians; 
-                    Axis  : in Vector3 := (Y => 1.0, others => 0.0)) 
-      return Matrix4 
+   function Rotate (Mtx   : in Matrix4;
+                    Angle : in Radians;
+                    Axis  : in Vector3 := (Y => 1.0, others => 0.0))
+      return Matrix4
    is
       Ret : Matrix4 := Mtx;
    begin

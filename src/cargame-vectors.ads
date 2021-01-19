@@ -32,12 +32,6 @@ package Cargame.Vectors is
       Ada.Containers.Vectors (GL.Types.Size, GL.Objects.Textures.Texture);
    package Radians_Vectors is new
       Ada.Containers.Vectors (GL.Types.Size, Cargame.Types.Radians);
-   package Distance_Type_Vectors is new
-      Ada.Containers.Vectors (GL.Types.Size, Cargame.Types.Distance_Type);
-   package Position_Type_Vectors is new
-      Ada.Containers.Vectors (GL.Types.Size, Cargame.Types.Position_Type);
-   package Velocity_Type_Vectors is new
-      Ada.Containers.Vectors (GL.Types.Size, Cargame.Types.Velocity_Type);
    package Material_Vectors is new
       Ada.Containers.Vectors (GL.Types.Size, Cargame.Types.Material);
    package Matrix3_Vectors is new
@@ -55,9 +49,6 @@ package Cargame.Vectors is
    subtype Vector_Of_Size           is Size_Vectors.Vector;
    subtype Vector_Of_Texture        is Texture_Vectors.Vector;
    subtype Vector_Of_Radians        is Radians_Vectors.Vector;
-   subtype Vector_Of_Distance_Type  is Distance_Type_Vectors.Vector;
-   subtype Vector_Of_Position_Type  is Position_Type_Vectors.Vector;
-   subtype Vector_Of_Velocity_Type  is Velocity_Type_Vectors.Vector;
    subtype Vector_Of_Material       is Material_Vectors.Vector;
    subtype Vector_Of_Matrix3        is Matrix3_Vectors.Vector;
    subtype Vector_Of_Matrix4        is Matrix4_Vectors.Vector;
@@ -77,13 +68,7 @@ package Cargame.Vectors is
       array (GL.Types.Size range <>) of aliased UInt;
    type Array_Of_Radians is
       array (GL.Types.Size range <>) of aliased Radians;
-   type Array_Of_Distance_Type is
-      array (GL.Types.Size range <>) of aliased Distance_Type;
-   type Array_Of_Position_Type is
-      array (GL.Types.Size range <>) of aliased Position_Type;
-   type Array_Of_Velocity_Type is
-      array (GL.Types.Size range <>) of aliased Velocity_Type;
-   type Array_Of_Material is
+  type Array_Of_Material is
       array (GL.Types.Size range <>) of aliased Material;
    type Array_Of_Matrix3 is
       array (GL.Types.Size range <>) of aliased Matrix3;

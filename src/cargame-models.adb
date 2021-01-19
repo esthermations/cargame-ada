@@ -360,7 +360,7 @@ package body Cargame.Models is
 
 
    ----------------------------------------------------------------------------
-   procedure Send_Updated_Uniforms (Object_Position : in Position_Type;
+   procedure Send_Updated_Uniforms (Object_Position : in Valid_Vector3;
                                     Object_Scale    : in Single := 1.0;
                                     Object_Rotation : in Radians := 0.0)
    is
@@ -439,41 +439,5 @@ package body Cargame.Models is
 
       Unbind_VAO;
    end Render;
-
-   ----------------------------------------------------------------------------
-   procedure Draw_A_Line (From, To : in Position_Type;
-                          Vao : in Vertex_Array_Object;
-                          Vbo : in Buffer)
-   is
-      Data : aliased constant Vector3_Array (1 .. 2) := (From, To);
-   begin
-      Vao.Bind;
-      Bind (Array_Buffer, Vbo);
-
-      Load_Vector3_Buffer (Target => Array_Buffer,
-                           Data   => Data,
-                           Usage  => Static_Draw);
-
-      Set_Vertex_Attrib_Pointer (Index      => Vertices_Attribute,
-                                 Count      => Vector3'Length,
-                                 Kind       => Single_Type,
-                                 Normalized => False,
-                                 Stride     => 0,
-                                 Offset     => 0);
-
-      Enable_Vertex_Attrib_Array (Vertices_Attribute);
-
-      Cargame.Uniforms.Drawing_A_Line.Set (1);
-
-      Send_Updated_Uniforms (Object_Position => Origin);
-
-      Draw_Arrays (Mode  => Lines,
-                   First => 0,
-                   Count => 2);
-
-      Cargame.Uniforms.Drawing_A_Line.Set (0);
-
-      Unbind_VAO;
-   end Draw_A_Line;
 
 end Cargame.Models;

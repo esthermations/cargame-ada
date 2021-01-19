@@ -31,8 +31,8 @@ package Cargame.Types is
 
    function Image (V : in Vector3) return String is
        (" ( " & Single'Image (V (X)) & ", "
-             & Single'Image (V (Y)) & ", "
-             & Single'Image (V (Z)) & " )");
+              & Single'Image (V (Y)) & ", "
+              & Single'Image (V (Z)) & " )");
 
    function Is_Valid (V : Vector3) return Boolean is
       (for all X of V => X'Valid) with Inline;
@@ -59,23 +59,7 @@ package Cargame.Types is
    subtype Valid_Vector2 is Vector2 with Dynamic_Predicate => Is_Valid (Valid_Vector2);
    subtype Valid_Vector3 is Vector3 with Dynamic_Predicate => Is_Valid (Valid_Vector3);
 
-   subtype Position_Type     is Valid_Vector3;
-   subtype Distance_Type     is Valid_Vector3;
-   subtype Velocity_Type     is Valid_Vector3;
-   subtype Acceleration_Type is Valid_Vector3;
-
-   subtype Volume3D_Type is Valid_Vector3
-      with Dynamic_Predicate => (for all Val of Volume3D_Type => Val = abs Val);
-
-   function "+" (L, R : Position_Type) return Position_Type is abstract;
-
-   use Ada.Real_Time;
-
-   --  NOTE: Velocity_Type is in metres per second. TODO: Codify that.
-   function "/" (L : Distance_Type; R : Time_Span) return Velocity_Type is
-      (Velocity_Type (L / Single (R / Seconds (1))));
-
-   Origin : constant Position_Type := (others => 0.0);
+   Origin : constant Valid_Vector3 := (others => 0.0);
 
    --------------------
    -- Buffer loaders --
@@ -84,21 +68,20 @@ package Cargame.Types is
    procedure Load_Int_Buffer     is new Load_To_Buffer (GL.Types.Int_Pointers);
    procedure Load_Vector2_Buffer is new Load_To_Buffer (Vector2_Pointers);
    procedure Load_Vector3_Buffer is new Load_To_Buffer (Vector3_Pointers);
-   --  procedure Load_Vector4_Buffer is new Load_To_Buffer (Vector4_Pointers);
 
    -------------------------
    -- Geometric functions --
    -------------------------
 
-   procedure Look_At (Camera_Position, Target_Position : in     Position_Type;
-                      Up                               : in     Distance_Type;
+   procedure Look_At (Camera_Position, Target_Position : in     Valid_Vector3;
+                      Up                               : in     Valid_Vector3;
                       Mtx                              :    out Matrix4);
 
-   function Look_At (Camera_Position, Target_Position : in Position_Type;
-                     Up                               : in Distance_Type)
+   function Look_At (Camera_Position, Target_Position : in Valid_Vector3;
+                     Up                               : in Valid_Vector3)
       return Matrix4;
 
-   procedure Init_Orthographic_Transform
+   procedure Orthographic
        (Top, Bottom, Left, Right, Z_Near, Z_Far : Single;
         Transform                               : out Matrix4);
 
@@ -107,7 +90,8 @@ package Cargame.Types is
 
    function Perspective_Matrix (View_Angle              : Degrees;
                                 Aspect_Ratio, Near, Far : Single)
-       return Matrix4;
+       return Matrix4
+       with Pre => Near > 0.0 and Far > Near;
 
    function Rotation_Matrix (Angle : Radians; Axis : Vector3) return Matrix4;
 
@@ -195,7 +179,7 @@ package Cargame.Types is
 
    --  Get the material's name for printing. TODO: Should possibly be renamed.
    function Printable_Name (M : in Material) return String is
-      ("Material[ " & Material_Names.To_String (M.Name) & " ]");
+      ("Material( " & Material_Names.To_String (M.Name) & " )");
 
    function Final_Index (M : in Material) return GL.Types.Size is
       (M.First_Index + M.Num_Indices);
@@ -210,8 +194,6 @@ package Cargame.Types is
        L.Diffuse_Texture.Raw_Id  = R.Diffuse_Texture.Raw_Id and then
        L.Specular_Texture.Raw_Id = R.Diffuse_Texture.Raw_Id and then
        L.Shininess               = R.Shininess);
-
-   Default_Material : Material;
 
    ---------------------
    --  Face Component --

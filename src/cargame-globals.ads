@@ -35,7 +35,7 @@ package Cargame.Globals is
    Frame_Interval         : constant Time_Span :=
       (Seconds (1) / Positive (Target_FPS));
 
-   Current_Frame : Frame := Frames'First;
+   Frame_Number : Frame := Frames'First;
    --  Incremented in the game loop.
 
    --  In an ideal world, when would this frame happen?
