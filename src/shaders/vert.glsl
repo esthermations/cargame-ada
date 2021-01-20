@@ -1,27 +1,19 @@
-#version 330
+#version 450
 
-layout (location = 0) in vec3 a_Vertex;
-layout (location = 1) in vec3 a_Normal;
-layout (location = 2) in vec2 a_TexCrd;
+// Ensure this corresponds to the number in cargame-ecs.ads
+#define MAX_MODEL_UNIFORMS 1000
+layout (location = 0) uniform mat4 Model[MAX_MODEL_UNIFORMS];
+layout (location = 1) uniform mat4 View;
+layout (location = 2) uniform mat4 Projection;
 
-out vec4 t_Original_Vertex;
-out vec3 t_Original_Normal;
+layout (location = 0) in  vec3 in_Position;
+layout (location = 1) in  vec3 in_Normal;
+layout (location = 0) out vec3 out_Colour;
 
-out vec4 t_Modified_Vertex;
-out vec3 t_Modified_Normal;
-out vec2 t_Modified_TexCrd;
-
-uniform mat4 u_Projection; // Look_At or Orthogonal
-uniform mat4 u_CamObj_Transform;
-uniform mat3 u_Normal_Transform;
-
-void main(void) {
-    t_Original_Vertex = vec4(a_Vertex, 1.0);
-    t_Original_Normal = a_Normal;
-
-    t_Modified_Vertex = u_CamObj_Transform * t_Original_Vertex;
-    t_Modified_Normal = u_Normal_Transform * t_Original_Normal;
-    t_Modified_TexCrd = vec2(a_TexCrd.x, -(a_TexCrd.y));
-
-    gl_Position = u_Projection * t_Modified_Vertex;
+void main() {
+    out_Colour = abs(in_Normal);
+    gl_Position = u_Projection
+                * Uniforms.View
+                * Uniforms.Models[gl_InstanceIndex]
+                * vec4(in_Position, 1.0);
 }

@@ -14,6 +14,24 @@ package Cargame.Gameplay is
    use Cargame.Models, Cargame.Types;
    use GL, GL.Types, GL.Types.Singles;
 
+   ------------------
+   --  Components  --
+   ------------------
+
+   package Components is
+      package Controlled_By_Player is new ECS.Component (Boolean);
+      package Position             is new ECS.Component (Types.Valid_Vector3);
+      package Velocity             is new ECS.Component (Types.Valid_Vector3);
+      package Acceleration         is new ECS.Component (Types.Valid_Vector3);
+      package Model                is new ECS.Component (Models.Model);
+      package Rotation             is new ECS.Component (Types.Radians);
+      package Rotational_Speed     is new ECS.Component (Types.Radians);
+      package Render_Scale         is new ECS.Component (Single);
+      package Object_Matrix        is new ECS.Component (Matrix4);
+      package CamObj_Matrix        is new ECS.Component (Matrix4);
+      package Normal_Matrix        is new ECS.Component (Matrix3);
+   end Components;
+
    ----------------
    --  Controls  --
    ----------------

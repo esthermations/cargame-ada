@@ -9,65 +9,39 @@ with Glfw.Input.Keys;
 with Glfw.Input.Mouse;
 with Glfw.Windows;         use Glfw.Windows;
 
---
---  NOTE:
---
---  This package was originally intended to just contain globals willy-nilly as
---  needed. That turns out to be a bit complicated due to circular unit
---  dependencies, and this is one of the only packages in the program that
---  doesn't depend on any other Cargame modules. That means this should
---  probably be called "Program_Globals", since it can't really contain any
---  game logic. Most of the game logic globals are in Cargame.Types for the
---  time being.
---
+--  Globals pertaining to the program, not necessarily the game logic. This
+--  package should have no dependencies on other Cargame packages.
 
 package Cargame.Globals is
 
-   ----------------------------------------------------------------------------
-   --  Fundamental timings and intervals
+   ---------------------------
+   --  Fundamental Timings  --
+   ---------------------------
 
    subtype Frame is Positive;
    subtype Frames is Frame;
 
-   Program_Epoch          : Time               := Clock;
-   Next_Frame_Time        : Time               := Clock;
-   Target_FPS             : constant Frames    := Frames (120);
-   Frame_Interval         : constant Time_Span :=
-      (Seconds (1) / Positive (Target_FPS));
+   Target_FPS      : constant Frames    := Frames (120);
+   Frame_Interval  : constant Time_Span := (Seconds (1) / Target_FPS);
 
-   Frame_Number : Frame := Frames'First;
-   --  Incremented in the game loop.
+   Frame_Number    : Frame := Frames'First;
 
-   --  In an ideal world, when would this frame happen?
-   function Scheduled_Time_For_Frame (F : in Frame) return Time is
-      (Program_Epoch + (F * Frame_Interval));
+   -----------------------
+   --  Rendering state  --
+   -----------------------
 
-   ----------------------------------------------------------------------------
-   --  Rendering state
+   function Ready_To_Render return Boolean;
 
-   Background_Colour : constant Color :=
-      (R => 0.1, G => 0.4, B => 0.4, A => 1.0);
+   Shader            : GL.Objects.Programs.Program;
 
-   Vertical_FoV      : Single                       := 60.0;
-   --  Actually degrees, but Degrees is defined in Cargame.Types and that'd be a
-   --  circular dependency... I do miss D's forward references and lack of
-   --  header files sometimes.
+   Background_Colour : constant Color := (0.1, 0.4, 0.4, 1.0);
+   Vertical_FoV      : constant       := 60.0;
+   Near_Plane        : constant       := 1.0;
+   Far_Plane         : constant       := 200.0;
 
-   GL_Program        : GL.Objects.Programs.Program;
-   Near_Plane        : constant                     := 1.0;
-   Far_Plane         : constant                     := 200.0;
-
-   Camera_Position   : Vector3                      := (0.0, 1.0, -1.0);
-
-   Diffuse_Map_ID    : constant Int := 0;
-   Specular_Map_ID   : constant Int := 1;
-
-   Default_Texture   : GL.Objects.Textures.Texture;
-
-   function Rendering_Context_Initialised return Boolean;
-
-   ----------------------------------------------------------------------------
-   --  Window state
+   --------------------
+   --  Window state  --
+   --------------------
 
    package Window is
 

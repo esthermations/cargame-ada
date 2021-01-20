@@ -8,10 +8,11 @@ with GL;                        use GL;
 with GL.Buffers;                use GL.Buffers;
 with GL.Files;
 with GL.Objects.Programs;       use GL.Objects.Programs;
-with GL.Objects.Shaders;        use GL.Objects.Shaders;
+with GL.Objects.Shaders;
 with GL.Objects.Textures;
 with GL.Toggles;
 with GL.Types;                  use GL.Types; use GL.Types.Singles;
+with GL.Uniforms;
 
 with Glfw;
 with Glfw.Input;                use Glfw.Input;
@@ -19,28 +20,44 @@ with Glfw.Windows;
 with Glfw.Windows.Context;      use Glfw.Windows.Context;
 with Glfw.Windows.Hints;        use Glfw.Windows.Hints;
 
-with Cargame.Globals;           use Cargame.Globals;
+with Cargame.Globals;
+with Cargame.Gameplay;          use Cargame.Gameplay;
 with Cargame.Models;            use Cargame.Models;
 with Cargame.Types;             use Cargame.Types;
-with Cargame.Uniforms;
 with Cargame.Util;
 with Cargame.ECS;
 
--------------------------------------------------------------------------------
-
 procedure Cargame.Main is
 
-   Frame_T0 : Time;
-   Frame_T1 : Time;
+   --  Timings
 
-   Player : ECS.Entity;
+   Program_Epoch   : constant Time := Clock;
+   Next_Frame_Time : Time := Program_Epoch;
+   Frame_T0        : Time;
+   Frame_T1        : Time;
+
+   --  Models
 
    Player_Model   : Model;
    Asteroid_Model : Model;
 
-   Asteroids : array (1 .. 1000) of ECS.Entity;
+   --  Entities
+
+   Player        : ECS.Entity;
+   Num_Asteroids : constant := ECS.Max_Entities - 1;
+   Asteroids     : ECS.Entity_Array (1 .. Num_Asteroids);
 
    Float_Generator : Ada.Numerics.Float_Random.Generator;
+
+   --  Uniforms
+
+   package Uniform_Bindings is
+      --  These numbers should correspond to the (binding=X) entries in the
+      --  vertex and fragment shaders.
+      Models     : constant := 0; pragma Unreferenced (Models);
+      Projection : constant := 1;
+      View       : constant := 2;
+   end Uniform_Bindings;
 
 begin
 
@@ -85,14 +102,15 @@ begin
       Object.Enable_Callback (Callbacks.Mouse_Button);
    end Enable_Callbacks;
 
-   -----------------------------------
-   --  Set up GL_Program (shaders)  --
-   -----------------------------------
+   --------------------
+   --  Shader setup  --
+   --------------------
 
    Util.Log ("Compiling shaders.");
 
    Shader_Setup :
    declare
+      use GL.Objects.Shaders;
       Vertex_Shader   : Shader (Kind => GL.Objects.Shaders.Vertex_Shader);
       Fragment_Shader : Shader (Kind => GL.Objects.Shaders.Fragment_Shader);
 
@@ -100,9 +118,9 @@ begin
       Fragment_Path : constant String := "../src/shaders/frag.glsl";
    begin
 
-      Initialize_Id (GL_Program);
-      Initialize_Id (Vertex_Shader);
-      Initialize_Id (Fragment_Shader);
+      GL.Objects.Programs.Initialize_Id (Globals.Shader);
+      GL.Objects.Shaders.Initialize_Id  (Vertex_Shader);
+      GL.Objects.Shaders.Initialize_Id  (Fragment_Shader);
 
       GL.Files.Load_Shader_Source_From_File (Vertex_Shader, Vertex_Path);
       GL.Files.Load_Shader_Source_From_File (Fragment_Shader, Fragment_Path);
@@ -122,17 +140,18 @@ begin
          pragma Assert (False, "Failed to compile Fragment shader.");
       end if;
 
-      GL_Program.Attach (Vertex_Shader);
-      GL_Program.Attach (Fragment_Shader);
-      GL_Program.Link;
+      Globals.Shader.Attach (Vertex_Shader);
+      Globals.Shader.Attach (Fragment_Shader);
+      Globals.Shader.Link;
 
-      if not GL_Program.Link_Status then
-         Put_Line ("Log: " & GL_Program.Info_Log);
+      if not Globals.Shader.Link_Status then
+         Util.Log_Error ("Failed to link shaders!");
+         Util.Log (Globals.Shader.Info_Log);
          pragma Assert (False, "Failed to link shaders.");
       end if;
    end Shader_Setup;
 
-   GL_Program.Use_Program;
+   Globals.Shader.Use_Program;
    GL.Toggles.Enable (GL.Toggles.Depth_Test);
 
    Util.Log ("Shader loaded.");
@@ -145,16 +164,16 @@ begin
    Asteroid_Model := Create_Model_From_Obj ("../src/models/Barrel02.obj");
 
    Player := ECS.New_Entity;
-   ECS.Controlled_By_Player.Set (Player, True);
-   ECS.Position.Set             (Player, (others => 0.0));
-   ECS.Velocity.Set             (Player, (others => 0.0));
-   ECS.Acceleration.Set         (Player, (others => 0.0));
-   ECS.Render_Scale.Set         (Player, 10.0);
-   ECS.Object_Matrix.Set        (Player, Identity4);
-   ECS.CamObj_Matrix.Set        (Player, Identity4);
-   ECS.Normal_Matrix.Set        (Player, Identity3);
-   ECS.Model.Set                (Player, Player_Model);
-   ECS.Rotation.Set             (Player, Radians (0.0));
+   Components.Controlled_By_Player.Set (Player, True);
+   Components.Position.Set             (Player, (others => 0.0));
+   Components.Velocity.Set             (Player, (others => 0.0));
+   Components.Acceleration.Set         (Player, (others => 0.0));
+   Components.Render_Scale.Set         (Player, 10.0);
+   Components.Object_Matrix.Set        (Player, Identity4);
+   Components.CamObj_Matrix.Set        (Player, Identity4);
+   Components.Normal_Matrix.Set        (Player, Identity3);
+   Components.Model.Set                (Player, Player_Model);
+   Components.Rotation.Set             (Player, Radians (0.0));
 
    for I in Asteroids'Range loop
       Asteroids (I) := ECS.New_Entity;
@@ -168,17 +187,17 @@ begin
          Position (X) := Factor * Single (R.Random (Float_Generator) - 0.5);
          Position (Y) := Factor * Single (R.Random (Float_Generator) - 0.5);
          Position (Z) := Factor * Single (R.Random (Float_Generator) - 0.5);
-         ECS.Position.Set (Asteroids (I), Position);
+         Components.Position.Set (Asteroids (I), Position);
       end;
 
       --  Set everything else
-      ECS.Rotation.Set         (Asteroids (I), Radians (0.0));
-      ECS.Model.Set            (Asteroids (I), Asteroid_Model);
-      ECS.Rotational_Speed.Set (Asteroids (I), Radians (0.01));
-      ECS.Render_Scale.Set     (Asteroids (I), 10.0);
-      ECS.Object_Matrix.Set    (Asteroids (I), Identity4);
-      ECS.CamObj_Matrix.Set    (Asteroids (I), Identity4);
-      ECS.Normal_Matrix.Set    (Asteroids (I), Identity3);
+      Components.Rotation.Set         (Asteroids (I), Radians (0.0));
+      Components.Model.Set            (Asteroids (I), Asteroid_Model);
+      Components.Rotational_Speed.Set (Asteroids (I), Radians (0.01));
+      Components.Render_Scale.Set     (Asteroids (I), 10.0);
+      Components.Object_Matrix.Set    (Asteroids (I), Identity4);
+      Components.CamObj_Matrix.Set    (Asteroids (I), Identity4);
+      Components.Normal_Matrix.Set    (Asteroids (I), Identity3);
    end loop;
 
    ---------------------------
@@ -187,21 +206,13 @@ begin
 
    Util.Log ("Initialising uniforms.");
 
-   Uniforms.Projection.Initialise
-      (GL_Program, Globals.Window.Calculate_Projection);
+   GL.Uniforms.Set_Single (Uniform_Bindings.Projection,
+                           Globals.Window.Calculate_Projection);
 
-   Uniforms.Camera_Transform.Initialise
-     (GL_Program,
-      Look_At (Camera_Position => Globals.Camera_Position,
-               Target_Position => Origin,
-               Up              => (0.0, 1.0, 0.0)));
-
-   Uniforms.Object_Transform.Initialise (GL_Program, Identity4);
-   Uniforms.CamObj_Transform.Initialise (GL_Program, Identity4);
-   Uniforms.Normal_Transform.Initialise (GL_Program, Identity3);
-
-   Uniforms.Diffuse_Map.Initialise  (GL_Program, Globals.Diffuse_Map_ID);
-   Uniforms.Specular_Map.Initialise (GL_Program, Globals.Specular_Map_ID);
+   GL.Uniforms.Set_Single (Uniform_Bindings.View,
+                           Look_At (Camera_Position => (0.0, 2.0, -2.0),
+                                    Target_Position => Origin,
+                                    Up              => (0.0, 1.0, 0.0)));
 
    ----------------------
    --  Main game loop  --
@@ -217,8 +228,7 @@ begin
       -------------------
 
       Frame_T0 := Clock;
-      Next_Frame_Time := Frame_T0 + Frame_Interval;
-      Globals.Frame_Number := @ + 1;
+      Next_Frame_Time := Frame_T0 + Globals.Frame_Interval;
 
       -----------------------
       --  Gameplay update  --
@@ -227,21 +237,23 @@ begin
       Globals.Frame_Number := @ + 1;
 
       Glfw.Input.Poll_Events;
-      ECS.Systems.Run_All_Systems;
+      ECS.Run_All_Systems;
 
       --------------
       --  Render  --
       --------------
 
       --  TODO: Move all uniform updates to systems.
+      --  FIXME: There's no actual render call here lmao
 
       Clear (Buffer_Bits'(Depth => True, Color => True, others => <>));
 
       declare
-         Pos : constant Valid_Vector3 := ECS.Position.Value (Player);
+         Pos : constant Valid_Vector3 := Components.Position.Get (Player);
       begin
-         Uniforms.Camera_Transform.Set
-            (Look_At (Camera_Position => (Pos + Vector3'(0.0, 2.0, -2.0)),
+         Uniforms.Set_Single
+            (Uniform_Bindings.View,
+             Look_At (Camera_Position => (Pos + Vector3'(0.0, 2.0, -2.0)),
                       Target_Position => (Pos + Vector3'(0.0, 0.0, +2.0)),
                       Up              => (Y => 1.0, others => 0.0)));
       end;
