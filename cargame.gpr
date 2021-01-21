@@ -24,7 +24,7 @@ project Cargame is
       ("-gnatwa",   --  All warnings
        "-gnatVa",   --  All validity checks
        "-gnatwe",   --  Warnings are errors
-       "-gnatyg",   --  Style checks (GNAT style)
+       "-gnatyg-I", --  Style checks (GNAT style) but allow 'in' on parameters
        "-gnatm80",  --  Limit lines to 80 columns
        "-gnatyO",   --  Overriding subprograms must be marked as such
        "-gnata",    --  Enable assertions and contract checks
