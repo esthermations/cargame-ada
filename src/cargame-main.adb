@@ -41,12 +41,6 @@ procedure Cargame.Main is
    Player_Model   : Model;
    Asteroid_Model : Model;
 
-   --  Entities
-
-   Player        : ECS.Entity;
-   Num_Asteroids : constant := ECS.Max_Entities - 1;
-   Asteroids     : ECS.Entity_Array (1 .. Num_Asteroids);
-
    Float_Generator : Ada.Numerics.Float_Random.Generator;
 
    --  Uniforms
@@ -228,37 +222,19 @@ begin
       -------------------
 
       Frame_T0 := Clock;
+
+      --  NOTE: We set Next_Frame_Time each frame which means that a slow frame
+      --  doesn't reduce the deadline for subsequent frames.
       Next_Frame_Time := Frame_T0 + Globals.Frame_Interval;
 
-      -----------------------
-      --  Gameplay update  --
-      -----------------------
+      ------------
+      --  Tick  --
+      ------------
 
       Globals.Frame_Number := @ + 1;
 
       Glfw.Input.Poll_Events;
       ECS.Run_All_Systems;
-
-      --------------
-      --  Render  --
-      --------------
-
-      --  TODO: Move all uniform updates to systems.
-      --  FIXME: There's no actual render call here lmao
-
-      Clear (Buffer_Bits'(Depth => True, Color => True, others => <>));
-
-      declare
-         Pos : constant Valid_Vector3 := Components.Position.Get (Player);
-      begin
-         Uniforms.Set_Single
-            (Uniform_Bindings.View,
-             Look_At (Camera_Position => (Pos + Vector3'(0.0, 2.0, -2.0)),
-                      Target_Position => (Pos + Vector3'(0.0, 0.0, +2.0)),
-                      Up              => (Y => 1.0, others => 0.0)));
-      end;
-
-      Swap_Buffers (Globals.Window.Ptr);
 
       -----------------------------
       --  Performance analytics  --

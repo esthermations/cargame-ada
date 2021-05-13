@@ -14,6 +14,15 @@ package Cargame.Gameplay is
    use Cargame.Models, Cargame.Types;
    use GL, GL.Types, GL.Types.Singles;
 
+   --------------------
+   --  Game Entities --
+   --------------------
+
+   Player : ECS.Entity;
+
+   Num_Asteroids : constant := ECS.Max_Entities - 1;
+   Asteroids     : ECS.Entity_Array (1 .. Num_Asteroids);
+
    ------------------
    --  Components  --
    ------------------

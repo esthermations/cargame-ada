@@ -1,7 +1,6 @@
 with "./dep/OpenGLAda/opengl";
 with "./dep/OpenGLAda/opengl-glfw";
 with "./dep/OpenGLAda/opengl-soil";
-with "./dep/ada-traits-containers/src/containers";
 with "gnatcoll";
 
 project Cargame is

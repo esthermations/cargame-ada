@@ -1,9 +1,6 @@
 with Ada.Containers;
 with Ada.Real_Time; use Ada.Real_Time;
 
-with Conts.Maps.Def_Def_Unbounded;
-with Conts.Functional.Sets;
-
 with GL.Types;
 with Cargame.Globals;
 with Cargame.Types;
@@ -28,34 +25,37 @@ package Cargame.ECS is
 
    type Entity_Array is array (Positive range <>) of aliased Entity;
 
-   package Entity_Set_Package is new Conts.Functional.Sets (Entity);
-   subtype Entity_Set is Entity_Set_Package.Set;
-   use Entity_Set_Package;
+   type Entity_Set is array (Entity) of Boolean with Pack;
+
+   type Entity_Sets is array (Positive range <>) of Entity_Set with Pack;
+
+   function Union (Sets : in Entity_Sets) return Entity_Set with
+      Post =>
+         --  If any given set contains E, result must contain E.
+         (for all I in Sets'Range =>
+            (for all E in Entity => (if Sets (I)(E) then Union'Result (E))))
+         and
+         --  If the result has E, then some given set must have E.
+         (for all E in Union'Result'Range =>
+            (if Union'Result (E) then (for some S of Sets => S (E))));
 
    -----------------
    --  Component  --
    -----------------
 
-   type Entity_Bool_Array is array (Entity) of Boolean with Pack;
-
    generic
       type Data_Type is private;
    package Component is
       Value      : array (Entity) of Data_Type;
-      Is_Present : Entity_Bool_Array;
+      Is_Present : Entity_Set;
 
       procedure Set (E : in Entity; V : in Data_Type)
          with Post => Is_Present (E) and Value (E) = V;
 
       function Get (E : in Entity) return Data_Type is (Value (E)) with Inline;
 
-      function Query return Entity_Set
-         with Post => (for all E of Query'Result => Is_Present (E)) and
-                      (for all E in Entity =>
-                        (if Is_Present (E) then Mem (Query'Result, E)));
-
-      function Q return Entity_Set renames Query;
-      --  Shorthand for writing systems
+      function Query return Entity_Set is (Is_Present);
+      function Q     return Entity_Set renames Query;
    end Component;
 
    ---------------

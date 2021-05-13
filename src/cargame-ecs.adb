@@ -1,12 +1,35 @@
-with Cargame.Globals; use Cargame.Globals;
+with Cargame.Globals;  use Cargame.Globals;
+with Cargame.Gameplay; use Cargame.Gameplay;
+with Cargame.Types;    use Cargame.Types;
+with Cargame.Uniforms; use Cargame.Uniforms;
+
+with GL;               use GL;
+with GL.Types;         use GL.Types;          use GL.Types.Singles;
+with GL.Buffers;       use GL.Buffers;
+with GL.Objects;
 
 package body Cargame.ECS is
 
-   Next_Entity : Entity := Entity'First;
+   use Cargame.Gameplay.Components;
+
+   function Union (Sets : in Entity_Sets) return Entity_Set is
+   begin
+      return Ret : Entity_Set := (others => False) do
+         for S of Sets loop
+            for E in Entity loop
+               if S (E) then
+                  Ret (E) := True;
+               end if;
+            end loop;
+         end loop;
+      end return;
+   end Union;
 
    ------------------
    --  New_Entity  --
    ------------------
+
+   Next_Entity : Entity := Entity'First;
 
    function New_Entity return Entity is
       pragma Assert (Next_Entity /= Entity'Last,
@@ -23,83 +46,117 @@ package body Cargame.ECS is
 
    package body Component is
 
-      function Query return Entity_Set is
-         Num_Entities : Natural := 0;
+      procedure Set (E : in Entity; V : in Data_Type) is
       begin
-         for E in Entity'Range loop
-            if Is_Present (E) then
-               Num_Entities := @ + 1;
-            end if;
-         end loop;
-
-         declare
-            Idx : Natural := 0;
-            Ret : Entity_Set (Num_Entities);
-         begin
-            for E in Entity'Range loop
-               if Is_Present (E) then
-                  Ret (Idx) := E;
-                  Idx := @ + 1;
-               end if;
-            end loop;
-
-            pragma Assert (Idx = Num_Entities);
-            return Ret;
-         end;
-      end Query;
+         Is_Present (E) := True;
+         Value      (E) := V;
+      end Set;
 
    end Component;
-
 
    ---------------
    --  Systems  --
    ---------------
 
-      procedure Run_All_Systems is
+   procedure Render (E : in ECS.Entity);
+
+   procedure Run_All_Systems is
+   begin
+
+      --  Clear backbuffer
+      Clear (Buffer_Bits'(Depth => True, Color => True, others => <>));
+
+      Tick_View_Matrix :
+      declare
+         Pos : constant Valid_Vector3 :=
+            Position.Get (Cargame.Gameplay.Player);
       begin
+         Uniforms.View_Matrix.Set_And_Send
+            (Look_At (Camera_Position => (Pos + Vector3'(0.0, 2.0, -2.0)),
+                      Target_Position => (Pos + Vector3'(0.0, 0.0, +2.0)),
+                      Up              => (Y => 1.0, others => 0.0)));
+      end Tick_View_Matrix;
 
-         Tick_Position :
-         for E of Union ((Position.Q, Velocity.Q)) loop
-            ECS.Position (E) := @ + ECS.Velocity (E);
-         end loop Tick_Position;
+      Tick_Position :
+      declare
+         Ents : constant Entity_Set := Union ((Position.Q, Velocity.Q));
+      begin
+         for E in Entity loop
+            if Ents (E) then
+               Position.Set (E, @ + Velocity.Get (E));
+            end if;
+         end loop;
+      end Tick_Position;
 
-         Tick_Rotation :
-         for E of Union ((Rotation.Q, Rotational_Speed.Q)) loop
-            ECS.Rotation (E) := @ + ECS.Rotational_Speed (E);
-         end loop Tick_Rotation;
+      Tick_Rotation :
+      declare
+         Ents : constant Entity_Set :=
+            Union ((Rotation.Q, Rotational_Speed.Q));
+      begin
+         for E in Entity loop
+            if Ents (E) then
+               Rotation.Set (E, @ + Rotational_Speed.Get (E));
+            end if;
+         end loop;
+      end Tick_Rotation;
 
-         Tick_Object_Matrices :
-         for E of Union ((Position.Q, Render_Scale.Q, Rotation.Q)) loop
-            Scale     (ECS.Object_Matrix (E), ECS.Render_Scale (E));
-            Rotate    (ECS.Object_Matrix (E), ECS.Rotation (E));
-            Translate (ECS.Object_Matrix (E), ECS.Position (E));
-         end loop Tick_Object_Matrices;
+      Tick_Object_Matrices :
+      declare
+         Ents : constant Entity_Set :=
+            Union ((Position.Q, Render_Scale.Q, Rotation.Q));
+      begin
+         for E in Entity loop
+            if Ents (E) then
+               declare
+                  Mtx : Matrix4 := Components.Object_Matrix.Get (E);
+               begin
+                  Scale     (Mtx, Components.Render_Scale.Get (E));
+                  Rotate    (Mtx, Components.Rotation.Get (E));
+                  Translate (Mtx, Components.Position.Get (E));
+                  Components.Object_Matrix.Set (E, Mtx);
+               end;
+            end if;
+         end loop;
+      end Tick_Object_Matrices;
 
-      end Run_All_Systems;
+      Render :
+      declare
+         Ents : constant Entity_Set := Model.Q;
+      begin
+         for E in Ents loop
+            if Ents (E) then
+               Render (E);
+            end if;
+         end loop;
+      end Render;
 
-      --------------
-      --  Render  --
-      --------------
+      --  Swap backbuffer to front
+      Swap_Buffers (Globals.Window.Ptr);
 
-      -------------------------------------------------------------------------
-      --  procedure Render (E : in ECS.Entity) is
-      --     M : Model := ECS.Model.Get (E);
-      --  begin
-      --     use GL.Objects.Buffers;
-      --     use GL.Objects.Textures;
-      --     use GL.Objects.Textures.Targets;
+   end Run_All_Systems;
 
-      --     Send_Updated_Uniforms (Object_Position => Pos,
-      --                            Object_Rotation => Rot,
-      --                            Object_Scale    => Scale);
+   --------------
+   --  Render  --
+   --------------
 
-      --     Bind (Vao);
-      --     Bind (Array_Buffer, Vertex_Buffer);
+   procedure Render (E : in ECS.Entity) is
+      M : Model := ECS.Model.Get (E);
+      use GL.Objects.Buffers;
+      use GL.Objects.Textures;
+      use GL.Objects.Textures.Targets;
+   begin
+      Send_Updated_Uniforms (Object_Position => Pos,
+                             Object_Rotation => Rot,
+                             Object_Scale    => Scale);
+      Bind (Vao);
+      Bind (Array_Buffer, Vertex_Buffer);
 
-      --     Draw_Arrays (Mode           => Triangles,
-      --                  Index_Type     => UInt_Type,
-      --                  Count => (Elm_Range.Last - Elm_Range.First));
-
-      --  end Render;
+      for Mtl of M.Materials loop
+         Draw_Arrays (Mode       => Triangles,
+                      Index_Type => UInt_Type,
+                      First      => Mtl.First_Index,
+                      Count      => Mtl.Num_Indices);
+      end loop;
+   end Render;
 
 end Cargame.ECS;
