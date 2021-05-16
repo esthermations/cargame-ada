@@ -1,6 +1,7 @@
 [submodule "dep/OpenGLAda"]
 	path = dep/OpenGLAda
 	url = https://github.com/flyx/OpenGLAda
+	branch = master
 [submodule "dep/ada-traits-containers"]
 	path = dep/ada-traits-containers
 	url = https://github.com/AdaCore/ada-traits-containers
@@ -10,3 +11,5 @@
 [submodule "dep/stb"]
 	path = dep/stb
 	url = https://github.com/nothings/stb
+[submodule ".\\OpenGLAda\\"]
+	branch = master

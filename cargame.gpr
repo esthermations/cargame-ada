@@ -1,6 +1,5 @@
 with "./dep/OpenGLAda/opengl";
 with "./dep/OpenGLAda/opengl-glfw";
-with "./dep/OpenGLAda/opengl-soil";
 with "gnatcoll";
 
 project Cargame is
@@ -13,16 +12,11 @@ project Cargame is
 
   for Create_Missing_Dirs use "True";
 
-  type OS is ("Linux", "Darwin", "Windows_NT");
-
-  Current_OS : OS := external ("OS", "Darwin");
-
   package Compiler is
     for Default_Switches ("c") use ("-O2", "-s", "-Wp,-w");
     for Default_Switches ("ada") use
       ("-gnatwa",   --  All warnings
        "-gnatVa",   --  All validity checks
-       "-gnatwe",   --  Warnings are errors
        "-gnatyg-I", --  Style checks (GNAT style) but allow 'in' on parameters
        "-gnatm80",  --  Limit lines to 80 columns
        "-gnatyO",   --  Overriding subprograms must be marked as such
@@ -32,7 +26,7 @@ project Cargame is
   end Compiler;
 
   package Linker is
-    for Default_Switches ("Ada") use ("-Lobj");
+    for Default_Switches ("Ada") use ("-Lobj", "-shared");
   end Linker;
 
 end Cargame;

@@ -1,11 +1,3 @@
-with Ada.Containers;
-with Ada.Real_Time; use Ada.Real_Time;
-
-with GL.Types;
-with Cargame.Globals;
-with Cargame.Types;
-with Cargame.Models;
-
 package Cargame.ECS is
 
    --------------
@@ -46,16 +38,13 @@ package Cargame.ECS is
    generic
       type Data_Type is private;
    package Component is
-      Value      : array (Entity) of Data_Type;
-      Is_Present : Entity_Set;
+      Value : array (Entity) of Data_Type;
+      Has   : Entity_Set; --  FIXME: Backwards naming?
 
       procedure Set (E : in Entity; V : in Data_Type)
-         with Post => Is_Present (E) and Value (E) = V;
+         with Post => Has (E) and then Value (E) = V;
 
-      function Get (E : in Entity) return Data_Type is (Value (E)) with Inline;
-
-      function Query return Entity_Set is (Is_Present);
-      function Q     return Entity_Set renames Query;
+      function Q return Entity_Set is (Has);
    end Component;
 
    ---------------

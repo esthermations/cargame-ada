@@ -1,12 +1,15 @@
 with Cargame.Globals;  use Cargame.Globals;
 with Cargame.Gameplay; use Cargame.Gameplay;
 with Cargame.Types;    use Cargame.Types;
-with Cargame.Uniforms; use Cargame.Uniforms;
+with Cargame.Renderer; use Cargame.Renderer;
 
 with GL;               use GL;
 with GL.Types;         use GL.Types;          use GL.Types.Singles;
 with GL.Buffers;       use GL.Buffers;
 with GL.Objects;
+with GL.Objects.Textures;
+
+with Glfw.Windows.Context;
 
 package body Cargame.ECS is
 
@@ -48,8 +51,8 @@ package body Cargame.ECS is
 
       procedure Set (E : in Entity; V : in Data_Type) is
       begin
-         Is_Present (E) := True;
-         Value      (E) := V;
+         Has   (E) := True;
+         Value (E) := V;
       end Set;
 
    end Component;
@@ -58,7 +61,83 @@ package body Cargame.ECS is
    --  Systems  --
    ---------------
 
-   procedure Render (E : in ECS.Entity);
+   --  Declarations
+
+   package Systems is
+      procedure Tick_View_Matrix;
+      procedure Tick_Position;
+      procedure Tick_Rotation;
+      procedure Tick_Object_Matrix;
+      procedure Render;
+   end Systems;
+
+   package body Systems is
+
+      procedure Tick_View_Matrix is
+         Pos : constant Valid_Vector3 :=
+            Position.Value (Cargame.Gameplay.Player);
+      begin
+         Uniforms.View_Matrix.Set_Without_Sending
+            (Look_At (Camera_Pos => (Pos + Vector3'(0.0, 2.0, -2.0)),
+                      Target_Pos => (Pos + Vector3'(0.0, 0.0, +2.0)),
+                      Up         => (Y => 1.0, others => 0.0)));
+      end Tick_View_Matrix;
+
+      procedure Tick_Position is
+         Update : constant Entity_Set := Union ((Position.Q, Velocity.Q));
+      begin
+         Position.Value := (for E in Entity =>
+                              (if Update (E)
+                               then @ (E) + Velocity.Value (E)
+                               else @ (E)));
+      end Tick_Position;
+
+      procedure Tick_Rotation is
+         Update : constant Entity_Set :=
+            Union ((Rotation.Q, Rotational_Speed.Q));
+      begin
+         Rotation.Value := (for E in Entity =>
+                              (if Update (E)
+                               then @ (E) + Rotational_Speed.Value (E)
+                               else @ (E)));
+      end Tick_Rotation;
+
+      procedure Tick_Object_Matrix is
+         Update : constant Entity_Set :=
+            Union ((Position.Q, Render_Scale.Q, Rotation.Q));
+
+      begin
+         for E in Entity loop
+            if Update (E) then
+               declare
+                  Mtx : Matrix4 := Components.Object_Matrix.Value (E);
+               begin
+                  Scale     (Mtx, Components.Render_Scale.Value (E));
+                  Rotate    (Mtx, Components.Rotation.Value (E));
+                  Translate (Mtx, Components.Position.Value (E));
+                  Object_Matrix.Value (E) := Mtx;
+               end;
+            end if;
+         end loop;
+
+      end Tick_Object_Matrix;
+
+      procedure Render is
+         Should_Render : constant Entity_Set :=
+            Union ((Model.Q, Rotation.Q, Position.Q, Render_Scale.Q));
+      begin
+         for E in Entity loop
+            if Should_Render (E) then
+               Cargame.Renderer.Enqueue_For_Rendering (E);
+            end if;
+         end loop;
+      end Render;
+
+   end Systems;
+
+   -----------------------
+   --  Run_All_Systems  --
+   -----------------------
 
    procedure Run_All_Systems is
    begin
@@ -66,97 +145,19 @@ package body Cargame.ECS is
       --  Clear backbuffer
       Clear (Buffer_Bits'(Depth => True, Color => True, others => <>));
 
-      Tick_View_Matrix :
-      declare
-         Pos : constant Valid_Vector3 :=
-            Position.Get (Cargame.Gameplay.Player);
-      begin
-         Uniforms.View_Matrix.Set_And_Send
-            (Look_At (Camera_Position => (Pos + Vector3'(0.0, 2.0, -2.0)),
-                      Target_Position => (Pos + Vector3'(0.0, 0.0, +2.0)),
-                      Up              => (Y => 1.0, others => 0.0)));
-      end Tick_View_Matrix;
+      --  NOTE: The dependency ordering of these systems is manually set here
+      --  just by arranging these function calls. Maybe we could do something
+      --  cleverer.
 
-      Tick_Position :
-      declare
-         Ents : constant Entity_Set := Union ((Position.Q, Velocity.Q));
-      begin
-         for E in Entity loop
-            if Ents (E) then
-               Position.Set (E, @ + Velocity.Get (E));
-            end if;
-         end loop;
-      end Tick_Position;
-
-      Tick_Rotation :
-      declare
-         Ents : constant Entity_Set :=
-            Union ((Rotation.Q, Rotational_Speed.Q));
-      begin
-         for E in Entity loop
-            if Ents (E) then
-               Rotation.Set (E, @ + Rotational_Speed.Get (E));
-            end if;
-         end loop;
-      end Tick_Rotation;
-
-      Tick_Object_Matrices :
-      declare
-         Ents : constant Entity_Set :=
-            Union ((Position.Q, Render_Scale.Q, Rotation.Q));
-      begin
-         for E in Entity loop
-            if Ents (E) then
-               declare
-                  Mtx : Matrix4 := Components.Object_Matrix.Get (E);
-               begin
-                  Scale     (Mtx, Components.Render_Scale.Get (E));
-                  Rotate    (Mtx, Components.Rotation.Get (E));
-                  Translate (Mtx, Components.Position.Get (E));
-                  Components.Object_Matrix.Set (E, Mtx);
-               end;
-            end if;
-         end loop;
-      end Tick_Object_Matrices;
-
-      Render :
-      declare
-         Ents : constant Entity_Set := Model.Q;
-      begin
-         for E in Ents loop
-            if Ents (E) then
-               Render (E);
-            end if;
-         end loop;
-      end Render;
+      Systems.Tick_View_Matrix;
+      Systems.Tick_Position;
+      Systems.Tick_Rotation;
+      Systems.Tick_Object_Matrix;
+      Systems.Render;
 
       --  Swap backbuffer to front
-      Swap_Buffers (Globals.Window.Ptr);
+      Glfw.Windows.Context.Swap_Buffers (Globals.Window.Ptr);
 
    end Run_All_Systems;
-
-   --------------
-   --  Render  --
-   --------------
-
-   procedure Render (E : in ECS.Entity) is
-      M : Model := ECS.Model.Get (E);
-      use GL.Objects.Buffers;
-      use GL.Objects.Textures;
-      use GL.Objects.Textures.Targets;
-   begin
-      Send_Updated_Uniforms (Object_Position => Pos,
-                             Object_Rotation => Rot,
-                             Object_Scale    => Scale);
-      Bind (Vao);
-      Bind (Array_Buffer, Vertex_Buffer);
-
-      for Mtl of M.Materials loop
-         Draw_Arrays (Mode       => Triangles,
-                      Index_Type => UInt_Type,
-                      First      => Mtl.First_Index,
-                      Count      => Mtl.Num_Indices);
-      end loop;
-   end Render;
 
 end Cargame.ECS;

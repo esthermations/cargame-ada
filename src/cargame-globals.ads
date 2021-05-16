@@ -100,4 +100,3 @@ package Cargame.Globals is
    end Mouse;
 
 end Cargame.Globals;
-

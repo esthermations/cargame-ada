@@ -27,10 +27,10 @@ package Cargame.Models is
       Normal_Buffer : GL.Objects.Buffers.Buffer;
    end record;
 
+   overriding
    function "=" (L, R : in Model) return Boolean is (L.Vao = R.Vao);
 
    function Is_Renderable (M : in Model) return Boolean;
-   procedure Render (M : in Model) with Pre => Is_Renderable (M);
 
    function All_Members_Are_Valid (Arr : in Vector3_Array) return Boolean;
    function All_Members_Are_Valid (Arr : in Vector2_Array) return Boolean;

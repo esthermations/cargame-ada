@@ -67,10 +67,10 @@ package Cargame.Gameplay is
       Unbound : Key renames Unknown;
 
       Control_Mapping : constant array (Control_Action) of Key :=
-         (Accelerate   => W, --Up,
-          Decelerate   => S, --Down,
-          Strafe_Left  => A, --Left,
-          Strafe_Right => D, --Right,
+         (Accelerate   => W, --  Up,
+          Decelerate   => S, --  Down,
+          Strafe_Left  => A, --  Left,
+          Strafe_Right => D, --  Right,
           Strafe_Up    => Space,
           Strafe_Down  => Left_Control,
           Yaw_Left     => Q,
@@ -80,6 +80,11 @@ package Cargame.Gameplay is
           Pitch_Up     => Unbound,
           Pitch_Down   => Unbound,
           Quit         => Escape);
+
+      Player_Is_Requesting_Action : array (Control_Action) of Boolean :=
+         (others => False);
+
+      function Key_To_Action (K : in Key) return Any_Control_Action;
 
    end Controls;
 

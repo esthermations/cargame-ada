@@ -61,11 +61,11 @@ package body Cargame.Obj_Parser.Mtl_Parser is
 
             case Token is
                when Ka =>
-                  Current_Material.Ambient_Light  := Get_Vector3 (Split_Line (Split_Line'First .. Split_Last));
+                  Current_Material.Ambient_Light  := Get_Vector3 (Split_Line);
                when Kd =>
-                  Current_Material.Diffuse_Light  := Get_Vector3 (Split_Line (Split_Line'First .. Split_Last));
+                  Current_Material.Diffuse_Light  := Get_Vector3 (Split_Line);
                when Ks =>
-                  Current_Material.Specular_Light := Get_Vector3 (Split_Line (Split_Line'First .. Split_Last));
+                  Current_Material.Specular_Light := Get_Vector3 (Split_Line);
                when Ns =>
                   Current_Material.Shininess := Get_Single (Split_Line (2));
 
@@ -84,9 +84,8 @@ package body Cargame.Obj_Parser.Mtl_Parser is
                      Load_Texture (To_String (Split_Line (2)));
 
                   Initialize_Id (Current_Material.Specular_Texture);
-                  pragma Assert (Current_Material.Specular_Texture.Initialized);
-
-                  Current_Material.Specular_Texture := Globals.Default_Texture;
+                  pragma Assert
+                     (Current_Material.Specular_Texture.Initialized);
 
                when Newmtl =>
                   --  Material name. Next token should be a string

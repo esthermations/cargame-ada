@@ -11,39 +11,32 @@ with Cargame.Util;                  use Cargame.Util;
 
 package body Cargame.Obj_Parser is
 
-   ---------------------------------------------------------------------------
-   --  Declarations
+   --------------------
+   --  Declarations  --
+   --------------------
 
    type Face is array (Integer range <>) of Face_Component;
 
-   ---------------------------------------------------------------------------
    function Get_Face (Split_Line : in XString_Array) return Face
-      is separate
       with Pre     => Split_Line (1) = "f",
            Post    => Get_Face'Result'Length = (Split_Line'Length - 1),
            Global  => null,
            Depends => (Get_Face'Result => Split_Line);
 
    function Convert_Into_Triangles (F : in Face) return Face
-      is separate
-      with Pre     => F'Length >= 3, --  We can't turn a line into a triangle...
+      with Pre     => F'Length >= 3, --  We can't turn a line into a triangle
            Post    => Convert_Into_Triangles'Result'Length >= F'Length,
            Global  => null,
            Depends => (Convert_Into_Triangles'Result => F);
-   --  Perform an EXTREMELY naive transformation to convert the given face into
-   --  a HOPEFULLY equivalent face, composed entirely of triangles. This
-   --  algorithm assumes that the given face is convex---i.e., that no line
-   --  between any of its edges will exit the face. Since this function only
-   --  indices, not vertices, we have no way of verifying this.
-   --
-   --  If it's already a triangle, it will be returned unchanged. Otherwise, the
-   --  resulting Face will have quite a few more Face_Components in it. It's
-   --  quite a naive transformation.
 
-   ---------------------------------------------------------------------------
-   --  Definitions
+   -------------------
+   --  Definitions  --
+   -------------------
 
-   ---------------------------------------------------------------------------
+   function Get_Face (Split_Line : in XString_Array) return Face is separate;
+
+   function Convert_Into_Triangles (F : in Face) return Face is separate;
+
    procedure Next_Significant_Line (File : in File_Type; Line : out XString)
    is
       Line_Is_Significant : Boolean;
@@ -55,7 +48,7 @@ package body Cargame.Obj_Parser is
          Line.Set (Ada.Text_IO.Get_Line (File));
 
          for I in Line loop
-            if Line (I) in Ascii.CR | Ascii.LF then
+            if Line (I) in ASCII.CR | ASCII.LF then
                Line (I) := ' ';
             end if;
          end loop;
@@ -84,8 +77,8 @@ package body Cargame.Obj_Parser is
       Ret : Obj_Data; --  Return value
 
       --  Unique vertices as specified in the obj file, irrespective of faces.
-      --  When we handle the faces, we just copy the values given by the indices
-      --  in the face from this array into the output data.
+      --  When we handle the faces, we just copy the values given by the
+      --  indices in the face from this array into the output data.
       Unique_Vertices : Vector_Of_Vector3;
       Unique_Normals  : Vector_Of_Vector3;
       Unique_TexCrds  : Vector_Of_Vector2;
@@ -100,6 +93,7 @@ package body Cargame.Obj_Parser is
       Obj_File              : File_Type;
       Current_Material_Name : Material_Name;
       Original_Directory    : constant String := Current_Directory;
+
    begin
       Set_Directory (Containing_Directory (File_Path));
 
@@ -122,26 +116,29 @@ package body Cargame.Obj_Parser is
          pragma Assert (Split_Line'Length >= 1);
 
          case Obj_Token'Value (To_String (Split_Line (1))) is
-
-            when VN => Unique_Normals.Append (Get_Vector3 (Split_Line (Split_Line'First .. Split_Last)));
-            when VT => Unique_TexCrds.Append (Get_Vector2 (Split_Line (Split_Line'First .. Split_Last)));
-            when V => Unique_Vertices.Append (Get_Vector3 (Split_Line (Split_Line'First .. Split_Last)));
+            when VN => Unique_Normals.Append (Get_Vector3 (Split_Line));
+            when VT => Unique_TexCrds.Append (Get_Vector2 (Split_Line));
+            when V => Unique_Vertices.Append (Get_Vector3 (Split_Line));
             when F =>
                declare
                   UV : Vector_Of_Vector3 renames Unique_Vertices;
                   UN : Vector_Of_Vector3 renames Unique_Normals;
                   UT : Vector_Of_Vector2 renames Unique_TexCrds;
 
-                  subtype UV_Range is GL.Types.Size range UV.First_Index .. UV.Last_Index;
-                  subtype UN_Range is GL.Types.Size range UN.First_Index .. UN.Last_Index;
-                  subtype UT_Range is GL.Types.Size range UT.First_Index .. UT.Last_Index;
+                  subtype UV_Range is GL.Types.Size range
+                     UV.First_Index .. UV.Last_Index;
+                  subtype UN_Range is GL.Types.Size range
+                     UN.First_Index .. UN.Last_Index;
+                  subtype UT_Range is GL.Types.Size range
+                     UT.First_Index .. UT.Last_Index;
 
                   Original_Face : constant Face :=
                      Get_Face (Split_Line (Split_Line'First .. Split_Last));
 
                   F : constant Face := Convert_Into_Triangles (Original_Face);
 
-                  TexCrd_Is_Used : Boolean := F (F'First).T /= Unset_Index;
+                  TexCrd_Is_Used : constant Boolean :=
+                     F (F'First).T /= Unset_Index;
                begin
 
                   if Ret.Has_TexCrds and not TexCrd_Is_Used then
@@ -227,7 +224,7 @@ package body Cargame.Obj_Parser is
       --  happen for the last material. Do that here.
       pragma Assert
          ((for some M of Ret.Materials => M.Num_Indices = Unset_Num_Indices),
-           "All materials have Num_Indices set. That's not supposed to happen.");
+           "The last material has Num_Indices set. That's strange.");
 
       for M of Ret.Materials loop
          if M.Num_Indices = Unset_Num_Indices then
@@ -273,12 +270,12 @@ package body Cargame.Obj_Parser is
 
       --  Ensure that our various *_Indices vectors are indexed alike
 
-      if (Data.Normals.First_Index /= Data.Vertices.First_Index) then
+      if Data.Normals.First_Index /= Data.Vertices.First_Index then
          Util.Log_Error ("Vertices and normals aren't indexed alike");
          Valid := False;
       end if;
 
-      if (Data.TexCrds.First_Index /= Data.Vertices.First_Index) then
+      if Data.TexCrds.First_Index /= Data.Vertices.First_Index then
          Util.Log_Error ("Vertices and texcrds aren't indexed alike");
          Valid := False;
       end if;

@@ -8,20 +8,20 @@ package body Cargame.Generic_Uniforms is
 
       function Initialised return Boolean is (Uniform_Index /= -1);
 
-      procedure Initialise (GL_Program : in Program) is
+      procedure Initialise (Shader : in Program) is
       begin
          if not Initialised then
-            pragma Assert (GL_Program.Initialized);
-            Uniform_Index := GL_Program.Uniform_Location(Name);
+            pragma Assert (Shader.Initialized);
+            Uniform_Index := Shader.Uniform_Location (Name);
          end if;
-         -- Re-initialisation is a no-op.
+         --  Re-initialisation is a no-op.
       end Initialise;
 
-      procedure Initialise (GL_Program : in Program;
+      procedure Initialise (Shader : in Program;
                             Value      : in Uniform_Type) is
       begin
-         Initialise (GL_Program);
-         Set (Value);
+         Initialise   (Shader);
+         Set_And_Send (Value);
       end Initialise;
 
       function Image return String is (Name);
@@ -33,16 +33,16 @@ package body Cargame.Generic_Uniforms is
          Current_Value := Val;
       end Set_Without_Sending;
 
-      procedure Send_To_GPU is
+      procedure Send_To_GL is
       begin
          Set_Procedure (Uniform_Index, Current_Value);
-      end Send_To_GPU;
+      end Send_To_GL;
 
-      procedure Set (Val : in Uniform_Type) is
+      procedure Set_And_Send (Val : in Uniform_Type) is
       begin
          Set_Without_Sending (Val);
-         Send_To_GPU;
-      end Set;
+         Send_To_GL;
+      end Set_And_Send;
 
    end Generic_Uniform;
 

@@ -68,7 +68,7 @@ package Cargame.Vectors is
       array (GL.Types.Size range <>) of aliased UInt;
    type Array_Of_Radians is
       array (GL.Types.Size range <>) of aliased Radians;
-  type Array_Of_Material is
+   type Array_Of_Material is
       array (GL.Types.Size range <>) of aliased Material;
    type Array_Of_Matrix3 is
       array (GL.Types.Size range <>) of aliased Matrix3;

@@ -1,14 +1,10 @@
 with Ada.Text_IO;
-with Ada.Strings;
-with Ada.Strings.Fixed;
-
-with GL.Objects.Vertex_Arrays;
-
 with GNATCOLL.Strings;
-
 with Cargame.Globals;
 
 package body Cargame.Util is
+
+   function Abbreviate_Context (Ctx : in String) return String;
 
    use Standard.Ascii;
 

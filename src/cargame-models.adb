@@ -6,7 +6,6 @@ with Ada.Text_IO;             use Ada.Text_IO;
 with GL;
 with GL.Objects.Textures;
 
-with Cargame.Uniforms;
 with Cargame.Obj_Parser;
 with Cargame.Util; use Cargame.Util;
 
@@ -19,9 +18,6 @@ package body Cargame.Models is
    ----------------------------------------------------------------------------
    function All_Members_Are_Valid (Arr : in Vector2_Array) return Boolean is
       (for all V of Arr => (for all X of V => X'Valid));
-
-   ----------------------------------------------------------------------------
-   function Get_Bounding_Volume (Verts : in Vector3_Array) return Volume3D_Type;
 
    ----------------------------------------------------------------------------
    function Is_Renderable (M : Model) return Boolean is
@@ -38,22 +34,6 @@ package body Cargame.Models is
          return False;
       end if;
    end Is_Renderable;
-
-   ----------------------------------------------------------------------------
-   function Get_Bounding_Volume (Verts : in Vector3_Array)
-      return Volume3D_Type
-   is
-      Min, Max : Vector3 := (others => 0.0);
-   begin
-      for Vec of Verts loop
-         for I in Vec'Range loop
-            if Vec (I) > Max (I) then Max (I) := Vec (I); end if;
-            if Vec (I) < Min (I) then Min (I) := Vec (I); end if;
-         end loop;
-      end loop;
-
-      return Volume3D_Type (Max - Min);
-   end Get_Bounding_Volume;
 
    ----------------------------------------------------------------------------
    function Create_Model (Vertices, Normals : in Vector3_Array;
@@ -183,13 +163,9 @@ package body Cargame.Models is
       -- Return --
       ------------
 
-      Unbind_VAO;
-
       return Model'(Vao           => Vao,
                     Vertex_Buffer => Vertex_Buf,
-                    Index_Buffer  => Index_Buf,
                     Normal_Buffer => Normal_Buf,
-                    TexCrd_Buffer => TexCrd_Buf,
                     Materials     => Out_Materials);
    end Create_Model;
 
@@ -213,10 +189,14 @@ package body Cargame.Models is
          procedure Add (V, N : in Vector3; T : in Vector2);
 
          --  Outputs:
-         function Get_Vertices return Vector3_Array with Pre => Attributes_Are_Valid;
-         function Get_Normals  return Vector3_Array with Pre => Attributes_Are_Valid;
-         function Get_TexCrds  return Vector2_Array with Pre => Attributes_Are_Valid;
-         function Get_Indices  return Int_Array     with Pre => Attributes_Are_Valid;
+         function Get_Vertices return Vector3_Array with
+            Pre => Attributes_Are_Valid;
+         function Get_Normals  return Vector3_Array with
+            Pre => Attributes_Are_Valid;
+         function Get_TexCrds  return Vector2_Array with
+            Pre => Attributes_Are_Valid;
+         function Get_Indices  return Int_Array     with
+            Pre => Attributes_Are_Valid;
 
          function Attributes_Are_Valid return Boolean with Ghost;
          --  For preconditions only.
@@ -237,6 +217,7 @@ package body Cargame.Models is
             T    : Vector2;
          end record;
 
+         overriding
          function "=" (A, B : in FC_Data) return Boolean is
             (A.V = B.V and A.N = B.N and A.T = B.T);
 
@@ -357,87 +338,5 @@ package body Cargame.Models is
                            Materials => Obj.Materials);
 
    end Create_Model_From_Obj;
-
-
-   ----------------------------------------------------------------------------
-   procedure Send_Updated_Uniforms (Object_Position : in Valid_Vector3;
-                                    Object_Scale    : in Single := 1.0;
-                                    Object_Rotation : in Radians := 0.0)
-   is
-      Camera_Transform : constant Matrix4 := Uniforms.Camera_Transform.Get;
-      Object_Transform : constant Matrix4 :=
-         Translate (Rotate (Scale (Identity4, Object_Scale),
-                            Object_Rotation),
-                    Object_Position);
-      CamObj_Transform : constant Matrix4 :=
-         Camera_Transform * Object_Transform;
-
-      Normal_Transform : constant Matrix3 :=
-         Transpose (Inverse (Mat4_To_Mat3 (CamObj_Transform)));
-   begin
-      for I in Normal_Transform'Range (1) loop
-         for J in Normal_Transform'Range (2) loop
-            Put (" " & Normal_Transform (I, J)'Img);
-         end loop;
-         New_Line; --Put (" ; ");
-      end loop;
-      New_Line;
-      New_Line;
-
-      Uniforms.Object_Transform.Set (Object_Transform);
-      Uniforms.CamObj_Transform.Set (CamObj_Transform);
-      Uniforms.Normal_Transform.Set (Normal_Transform);
-
-   end Send_Updated_Uniforms;
-
-   ----------------------------------------------------------------------------
-   procedure Render (M : in Model;
-                     E : in ECS.Entity)
-   is
-      use GL.Objects.Textures;
-      use GL.Objects.Textures.Targets;
-      use Cargame.Gameplay;
-
-      CamObj : constant Matrix4 := Components.CamObj_Matrix.Get (E);
-      Normal : constant Matrix3 := Components.Normal_Matrix.Get (E);
-   begin
-
-      --Send_Updated_Uniforms (Object_Position => Position,
-      --                       Object_Rotation => Rotation,
-      --                       Object_Scale    => Scale);
-
-      Uniforms.CamObj_Transform.Set (CamObj);
-      Uniforms.Normal_Transform.Set (Normal);
-
-      Bind (M.Vao);
-      Bind (Array_Buffer,         M.Vertex_Buffer);
-      Bind (Element_Array_Buffer, M.Index_Buffer);
-
-      for Mtl of M.Materials loop
-
-         Uniforms.Material_Shininess.Set (Mtl.Shininess);
-         Uniforms.Material_Ambient.Set   (Mtl.Ambient_Light);
-
-         if Mtl.Diffuse_Texture.Initialized then
-            Uniforms.Diffuse_Map.Set (Globals.Diffuse_Map_ID);
-            Set_Active_Unit (Globals.Diffuse_Map_ID);
-            Texture_2D.Bind (Mtl.Diffuse_Texture);
-         end if;
-
-         if Mtl.Specular_Texture.Initialized then
-            Uniforms.Specular_Map.Set (Globals.Specular_Map_ID);
-            Set_Active_Unit (Globals.Specular_Map_ID);
-            Texture_2D.Bind (Mtl.Specular_Texture);
-         end if;
-
-         Draw_Elements (Mode           => Triangles,
-                        Index_Type     => UInt_Type,
-                        Element_Offset => Integer (Mtl.First_Index),
-                        Count          => Mtl.Num_Indices);
-
-      end loop;
-
-      Unbind_VAO;
-   end Render;
 
 end Cargame.Models;

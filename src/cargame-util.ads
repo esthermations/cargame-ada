@@ -1,13 +1,8 @@
 with GNAT.Source_Info;
-
 with Ada.Real_Time; use Ada.Real_Time;
-with Ada.Strings.Unbounded;
-
 with GL;            use GL;
 
 package Cargame.Util is
-
-   use Ada.Strings.Unbounded;
 
    function Time_Span_Image (TS : in Time_Span) return String;
    function Image (TS : in Time_Span) return String renames Time_Span_Image;

@@ -51,11 +51,11 @@ package body Cargame.Types is
 
    ----------------------------------------------------------------------------
    --  Abridged from OpenGLAda/examples/common/src/maths.adb.
-   procedure Look_At (Camera_Position, Target_Position : in     Valid_Vector3;
-                      Up                               : in     Valid_Vector3;
-                      Mtx                              :    out Matrix4)
+   procedure Look_At (Camera_Pos, Target_Pos : in     Valid_Vector3;
+                      Up                     : in     Valid_Vector3;
+                      Mtx                    :    out Matrix4)
    is
-      Forward : constant Vector3 := Normalized (Camera_Position - Target_Position);
+      Forward : constant Vector3 := Normalized (Camera_Pos - Target_Pos);
       Side    : constant Vector3 := Normalized (Cross_Product (Up, Forward));
       Up_New  : constant Vector3 := Normalized (Cross_Product (Forward, Side));
    begin
@@ -63,41 +63,22 @@ package body Cargame.Types is
               Y => (Side (Y), Up_New (Y), Forward (Y), 0.0),
               Z => (Side (Z), Up_New (Z), Forward (Z), 0.0),
               -----
-              W => (X => -Dot_Product (Camera_Position, Side),
-                    Y => -Dot_Product (Camera_Position, Up_New),
-                    Z => -Dot_Product (Camera_Position, Forward),
+              W => (X => -Dot_Product (Camera_Pos, Side),
+                    Y => -Dot_Product (Camera_Pos, Up_New),
+                    Z => -Dot_Product (Camera_Pos, Forward),
                     W => 1.0));
    end Look_At;
 
    ----------------------------------------------------------------------------
-   function Look_At (Camera_Position, Target_Position : in Valid_Vector3;
-                     Up                               : in Valid_Vector3)
+   function Look_At (Camera_Pos, Target_Pos : in Valid_Vector3;
+                     Up                     : in Valid_Vector3)
       return Matrix4
    is
    begin
       return Ret : Matrix4 do
-         Look_At (Camera_Position, Target_Position, Up, Ret);
+         Look_At (Camera_Pos, Target_Pos, Up, Ret);
       end return;
    end Look_At;
-
-   ----------------------------------------------------------------------------
-   --  Straight copy from OpenGLAda/examples/common/src/maths.adb.
-   procedure Init_Orthographic_Transform
-      (Top, Bottom, Left, Right, Z_Near, Z_Far : in     Single;
-       Transform                               :    out Matrix4)
-   is
-      dX : constant Single := (Right - Left);
-      dY : constant Single := (Top - Bottom);
-      dZ : constant Single := (Z_Far - Z_Near);
-   begin
-      Transform := GL.Types.Singles.Identity4;
-      Transform (X, X) := 2.0 / dX;
-      Transform (W, X) := -(Right + Left) / dX;
-      Transform (Y, Y) := 2.0 / dY;
-      Transform (W, Y) := -(Top + Bottom) / dY;
-      Transform (Z, Z) := 2.0 / dZ;
-      Transform (W, Z) := -(Z_Far + Z_Near) / dZ;
-   end Init_Orthographic_Transform;
 
    ----------------------------------------------------------------------------
    --  Straight copy from OpenGLAda/examples/common/src/maths.adb.
@@ -258,9 +239,9 @@ package body Cargame.Types is
       UT64 : constant Unsigned_64 := Unsigned_64 (C.T);
    begin
       return Hash_Type
-         (     Shift_Left (UV64, 0 * (Hash_Type'Size / 3))
-             + Shift_Left (UN64, 1 * (Hash_Type'Size / 3))
-             + Shift_Left (UT64, 2 * (Hash_Type'Size / 3)));
+         (Shift_Left (UV64, 0 * (Hash_Type'Size / 3)) +
+          Shift_Left (UN64, 1 * (Hash_Type'Size / 3)) +
+          Shift_Left (UT64, 2 * (Hash_Type'Size / 3)));
    end Hash;
 
 end Cargame.Types;

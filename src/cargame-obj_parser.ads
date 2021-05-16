@@ -1,5 +1,4 @@
 with Ada.Text_IO;           use Ada.Text_IO;
-with Ada.Directories;
 
 with GL;
 with GL.Types;
@@ -31,10 +30,10 @@ package Cargame.Obj_Parser is
       Vertices  : Vector_Of_Vector3;
       Normals   : Vector_Of_Vector3;
 
-      case Has_TexCrds is 
+      case Has_TexCrds is
          when True   => TexCrds : Vector_Of_Vector2;
          when others => null;
-      end case; 
+      end case;
    end record;
 
    ---------------------------------------------------------------------------
@@ -44,7 +43,7 @@ package Cargame.Obj_Parser is
 
    ---------------------------------------------------------------------------
    function Parse (File_Path : in String) return Obj_Data
-       with Pre  => Globals.GL_Program.Initialized,
+       with Pre  => Globals.Shader.Initialized,
             Post => Is_Valid (Parse'Result);
 
 private
@@ -57,24 +56,23 @@ private
       is (Single'Value (Str.To_String))
       with Pre     => Length (Str) /= 0,
            Depends => (Get_Single'Result => Str);
-   
 
    ---------------------------------------------------------------------------
-   function Get_Vector2 (Split_Line : in XString_Array) return Valid_Vector2 
+   function Get_Vector2 (Split_Line : in XString_Array) return Valid_Vector2
       is (Vector2'(X => Get_Single (Split_Line (2)),
                    Y => Get_Single (Split_Line (3))))
-      with Pre => (Split_Line'Length >= 3 and then 
+      with Pre => (Split_Line'Length >= 3 and then
                    Split_Line (1).To_String in "vt");
                     --  "vt" -> texcoord. Technically that makes this
                     --  function "Get_TexCrd" but y'know.
 
    ---------------------------------------------------------------------------
-   function Get_Vector3 (Split_Line : in XString_Array) return Valid_Vector3 
+   function Get_Vector3 (Split_Line : in XString_Array) return Valid_Vector3
       is (Vector3'(X => Get_Single (Split_Line (2)),
                    Y => Get_Single (Split_Line (3)),
                    Z => Get_Single (Split_Line (4))))
       with Pre => (Split_Line'Length = 4 and then
-                   To_String (Split_Line (1)) in 
+                   To_String (Split_Line (1)) in
                       "v" | "vn" | "Ks" | "Kd" | "Ka");
 
    ---------------------------------------------------------------------------

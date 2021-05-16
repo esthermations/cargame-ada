@@ -1,4 +1,4 @@
--- copied wholesale from OpenGLAda/examples/common/quaternions.ads
+--  copied wholesale from OpenGLAda/examples/common/quaternions.ads
 generic
    type Real is digits <>;
 

@@ -2,7 +2,6 @@ with Ada.Containers;
 with Ada.Numerics;
 with Ada.Numerics.Generic_Elementary_Functions;
 with Ada.Strings.Bounded;
-with Ada.Real_Time;
 
 with GL;
 with GL.Objects.Buffers;
@@ -56,8 +55,10 @@ package Cargame.Types is
    function To_Degrees (X : Radians) return Degrees is
       (Degrees (X) * Degrees_Per_Radian);
 
-   subtype Valid_Vector2 is Vector2 with Dynamic_Predicate => Is_Valid (Valid_Vector2);
-   subtype Valid_Vector3 is Vector3 with Dynamic_Predicate => Is_Valid (Valid_Vector3);
+   subtype Valid_Vector2 is Vector2 with
+      Dynamic_Predicate => Is_Valid (Valid_Vector2);
+   subtype Valid_Vector3 is Vector3 with
+      Dynamic_Predicate => Is_Valid (Valid_Vector3);
 
    Origin : constant Valid_Vector3 := (others => 0.0);
 
@@ -73,17 +74,13 @@ package Cargame.Types is
    -- Geometric functions --
    -------------------------
 
-   procedure Look_At (Camera_Position, Target_Position : in     Valid_Vector3;
-                      Up                               : in     Valid_Vector3;
-                      Mtx                              :    out Matrix4);
+   procedure Look_At (Camera_Pos, Target_Pos : in     Valid_Vector3;
+                      Up                     : in     Valid_Vector3;
+                      Mtx                    :    out Matrix4);
 
-   function Look_At (Camera_Position, Target_Position : in Valid_Vector3;
-                     Up                               : in Valid_Vector3)
+   function Look_At (Camera_Pos, Target_Pos : in Valid_Vector3;
+                     Up                     : in Valid_Vector3)
       return Matrix4;
-
-   procedure Orthographic
-       (Top, Bottom, Left, Right, Z_Near, Z_Far : Single;
-        Transform                               : out Matrix4);
 
    function Perspective_Matrix (Top, Bottom, Left, Right, Near, Far : Single)
        return Matrix4;
@@ -157,8 +154,8 @@ package Cargame.Types is
    use Material_Names;
 
    function Names_Match (A, B : in Material_Name) return Boolean
-      is (if (Length (A) = 0 or Length (B) = 0) then False
-          else (if (Length (A) > Length (B))
+      is (if Length (A) = 0 or Length (B) = 0 then False
+          else (if Length (A) > Length (B)
                 then (Head (A, Length (B)) = B)
                 else (Head (B, Length (A)) = A)));
 
@@ -184,6 +181,7 @@ package Cargame.Types is
    function Final_Index (M : in Material) return GL.Types.Size is
       (M.First_Index + M.Num_Indices);
 
+   overriding
    function "=" (L, R : in Material) return Boolean is
       (L.Name = R.Name and then
        L.Ambient_Light           = R.Ambient_Light and then
@@ -195,6 +193,17 @@ package Cargame.Types is
        L.Specular_Texture.Raw_Id = R.Diffuse_Texture.Raw_Id and then
        L.Shininess               = R.Shininess);
 
+   Default_Material : constant Material :=
+      (Name             => To_Material_Name ("Default Material"),
+       Ambient_Light    => (others => 0.0),
+       Diffuse_Light    => (others => 0.0),
+       Specular_Light   => (others => 0.0),
+       First_Index      => 0,
+       Num_Indices      => 0,
+       Diffuse_Texture  => <>,
+       Specular_Texture => <>,
+       Shininess        => 0.0);
+
    ---------------------
    --  Face Component --
    ---------------------
@@ -203,6 +212,7 @@ package Cargame.Types is
       V, T, N : GL.Types.Size;
    end record;
 
+   overriding
    function "=" (A, B : Face_Component) return Boolean is
       (A.V = B.V and then A.T = B.T and then A.N = B.N);
 

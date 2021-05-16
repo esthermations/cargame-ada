@@ -19,16 +19,16 @@ package Cargame.Generic_Uniforms is
    generic
       Name : String;
       type Uniform_Type is private;
-      with procedure Set_Procedure(U   : in Uniform;
-                                   Val : in Uniform_Type);
+      with procedure Set_Procedure (U   : in Uniform;
+                                    Val : in Uniform_Type);
    package Generic_Uniform with Abstract_State => State is
 
-      procedure Initialise (GL_Program : in Program);
-      procedure Initialise (GL_Program : in Program; Value : in Uniform_Type);
+      procedure Initialise (Shader : in Program);
+      procedure Initialise (Shader : in Program; Value : in Uniform_Type);
 
       function  Initialised return Boolean;
 
-      function  Get   return Uniform_Type;
+      function  Get return Uniform_Type;
 
       procedure Set_And_Send        (Val : in Uniform_Type);
       procedure Set_Without_Sending (Val : in Uniform_Type);

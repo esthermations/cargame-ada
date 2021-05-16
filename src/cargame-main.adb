@@ -6,11 +6,8 @@ with Ada.Numerics.Float_Random;
 
 with GL;                        use GL;
 with GL.Buffers;                use GL.Buffers;
-with GL.Files;
 with GL.Objects.Programs;       use GL.Objects.Programs;
-with GL.Objects.Shaders;
 with GL.Objects.Textures;
-with GL.Toggles;
 with GL.Types;                  use GL.Types; use GL.Types.Singles;
 with GL.Uniforms;
 
@@ -26,6 +23,7 @@ with Cargame.Models;            use Cargame.Models;
 with Cargame.Types;             use Cargame.Types;
 with Cargame.Util;
 with Cargame.ECS;
+with Cargame.Renderer;
 
 procedure Cargame.Main is
 
@@ -42,16 +40,6 @@ procedure Cargame.Main is
    Asteroid_Model : Model;
 
    Float_Generator : Ada.Numerics.Float_Random.Generator;
-
-   --  Uniforms
-
-   package Uniform_Bindings is
-      --  These numbers should correspond to the (binding=X) entries in the
-      --  vertex and fragment shaders.
-      Models     : constant := 0; pragma Unreferenced (Models);
-      Projection : constant := 1;
-      View       : constant := 2;
-   end Uniform_Bindings;
 
 begin
 
@@ -96,59 +84,7 @@ begin
       Object.Enable_Callback (Callbacks.Mouse_Button);
    end Enable_Callbacks;
 
-   --------------------
-   --  Shader setup  --
-   --------------------
-
-   Util.Log ("Compiling shaders.");
-
-   Shader_Setup :
-   declare
-      use GL.Objects.Shaders;
-      Vertex_Shader   : Shader (Kind => GL.Objects.Shaders.Vertex_Shader);
-      Fragment_Shader : Shader (Kind => GL.Objects.Shaders.Fragment_Shader);
-
-      Vertex_Path   : constant String := "../src/shaders/vert.glsl";
-      Fragment_Path : constant String := "../src/shaders/frag.glsl";
-   begin
-
-      GL.Objects.Programs.Initialize_Id (Globals.Shader);
-      GL.Objects.Shaders.Initialize_Id  (Vertex_Shader);
-      GL.Objects.Shaders.Initialize_Id  (Fragment_Shader);
-
-      GL.Files.Load_Shader_Source_From_File (Vertex_Shader, Vertex_Path);
-      GL.Files.Load_Shader_Source_From_File (Fragment_Shader, Fragment_Path);
-
-      Compile (Vertex_Shader);
-      Compile (Fragment_Shader);
-
-      if not Vertex_Shader.Compile_Status then
-         Util.Log_Error ("Failed to compile Vertex shader.");
-         Util.Log (Vertex_Shader.Info_Log);
-         pragma Assert (False, "Failed to compile Vertex shader.");
-      end if;
-
-      if not Fragment_Shader.Compile_Status then
-         Util.Log_Error ("Failed to compile Fragment shader.");
-         Util.Log (Fragment_Shader.Info_Log);
-         pragma Assert (False, "Failed to compile Fragment shader.");
-      end if;
-
-      Globals.Shader.Attach (Vertex_Shader);
-      Globals.Shader.Attach (Fragment_Shader);
-      Globals.Shader.Link;
-
-      if not Globals.Shader.Link_Status then
-         Util.Log_Error ("Failed to link shaders!");
-         Util.Log (Globals.Shader.Info_Log);
-         pragma Assert (False, "Failed to link shaders.");
-      end if;
-   end Shader_Setup;
-
-   Globals.Shader.Use_Program;
-   GL.Toggles.Enable (GL.Toggles.Depth_Test);
-
-   Util.Log ("Shader loaded.");
+   Cargame.Renderer.Init;
 
    ---------------------------
    --  Initialise entities  --
@@ -159,7 +95,7 @@ begin
 
    Player := ECS.New_Entity;
    Components.Controlled_By_Player.Set (Player, True);
-   Components.Position.Set             (Player, (others => 0.0));
+   Components.Position.Set             (Player, Origin);
    Components.Velocity.Set             (Player, (others => 0.0));
    Components.Acceleration.Set         (Player, (others => 0.0));
    Components.Render_Scale.Set         (Player, 10.0);
@@ -200,13 +136,13 @@ begin
 
    Util.Log ("Initialising uniforms.");
 
-   GL.Uniforms.Set_Single (Uniform_Bindings.Projection,
+   GL.Uniforms.Set_Single (Globals.Shader.Uniform_Location ("u_Projection"),
                            Globals.Window.Calculate_Projection);
 
-   GL.Uniforms.Set_Single (Uniform_Bindings.View,
-                           Look_At (Camera_Position => (0.0, 2.0, -2.0),
-                                    Target_Position => Origin,
-                                    Up              => (0.0, 1.0, 0.0)));
+   GL.Uniforms.Set_Single (Globals.Shader.Uniform_Location ("u_View"),
+                           Look_At (Camera_Pos => (0.0, 2.0, -2.0),
+                                    Target_Pos => Origin,
+                                    Up         => (0.0, 1.0, 0.0)));
 
    ----------------------
    --  Main game loop  --
@@ -235,6 +171,7 @@ begin
 
       Glfw.Input.Poll_Events;
       ECS.Run_All_Systems;
+      Renderer.Render_Enqueued_Entities;
 
       -----------------------------
       --  Performance analytics  --

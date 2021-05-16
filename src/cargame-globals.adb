@@ -1,19 +1,15 @@
 with GL.Window;
-with Cargame.Types;
-
-with Cargame.Uniforms;
-with Cargame.Globals;
--- with Cargame.Types;
-
 with Glfw;
 
+with Cargame.Types;
+with Cargame.Globals;
 with Cargame.Gameplay;
-with Cargame.Util;
+with Cargame.Renderer; use Cargame.Renderer;
 
 package body Cargame.Globals is
 
-   function Rendering_Context_Initialised return Boolean is
-      (Globals.Window.Object.Initialized and Globals.GL_Program.Initialized);
+   function Ready_To_Render return Boolean is
+      (Globals.Window.Object.Initialized and Globals.Shader.Initialized);
 
    --------------
    --  Window  --
@@ -22,6 +18,7 @@ package body Cargame.Globals is
    package body Window is
 
       -------------------------------------------------------------------------
+      overriding
       procedure Key_Changed (Object   : not null access Main_Window_Type;
                              Key      : Glfw.Input.Keys.Key;
                              Scancode : Glfw.Input.Keys.Scancode;
@@ -49,6 +46,7 @@ package body Cargame.Globals is
       end Key_Changed;
 
       -------------------------------------------------------------------------
+      overriding
       procedure Size_Changed (Object        : not null access Main_Window_Type;
                               Width, Height : Natural)
       is
@@ -56,11 +54,12 @@ package body Cargame.Globals is
       begin
          Globals.Window.Width  := Glfw.Size (Width);
          Globals.Window.Height := Glfw.Size (Height);
-         Uniforms.Projection.Set (Calculate_Projection);
+         Uniforms.Projection.Set_And_Send (Calculate_Projection);
          GL.Window.Set_Viewport (0, 0, Int (Width), Int (Height));
       end Size_Changed;
 
       -------------------------------------------------------------------------
+      overriding
       procedure Mouse_Position_Changed
          (Object : not null access Main_Window_Type;
           X, Y   : Glfw.Input.Mouse.Coordinate)
@@ -72,6 +71,7 @@ package body Cargame.Globals is
       end Mouse_Position_Changed;
 
       -------------------------------------------------------------------------
+      overriding
       procedure Mouse_Button_Changed
          (Object : not null access Main_Window_Type;
           Button : Glfw.Input.Mouse.Button;
@@ -82,6 +82,10 @@ package body Cargame.Globals is
       begin
          Globals.Mouse.Button_States (Button) := State;
       end Mouse_Button_Changed;
+
+      ----------------------------
+      --  Calculate_Projection  --
+      ----------------------------
 
       function Calculate_Projection return Matrix4 is
       begin
@@ -102,11 +106,11 @@ package body Cargame.Globals is
 
       function Normalised_Position_From_Centre return Vector2 is
          Pos : constant Vector2 := Mouse.Position;
-         Half_Screen_Width  : constant Single := (Single (Window.Width ) / 2.0);
-         Half_Screen_Height : constant Single := (Single (Window.Height) / 2.0);
+         Half_Screen_W : constant Single := (Single (Window.Width)  / 2.0);
+         Half_Screen_H : constant Single := (Single (Window.Height) / 2.0);
          Ret : constant Vector2 :=
-            (GL.X => (Pos (GL.X) - Half_Screen_Width ) / Half_Screen_Width,
-             GL.Y => (Pos (GL.Y) - Half_Screen_Height) / Half_Screen_Height);
+            (GL.X => (Pos (GL.X) - Half_Screen_W) / Half_Screen_W,
+             GL.Y => (Pos (GL.Y) - Half_Screen_H) / Half_Screen_H);
       begin
          return Ret;
       end Normalised_Position_From_Centre;
