@@ -1,13 +1,13 @@
+with Cargame.Config;
+
 package Cargame.ECS is
 
    --------------
    --  Entity  --
    --------------
 
-   Max_Entities : constant := 100;
+   Max_Entities : constant := Cargame.Config.Max_Entities;
    type Entity is new Natural range 0 .. Max_Entities;
-
-   No_Entity : constant Entity := Entity'Last;
 
    function New_Entity return Entity;
 
@@ -38,7 +38,7 @@ package Cargame.ECS is
    generic
       type Data_Type is private;
    package Component is
-      Value : array (Entity) of Data_Type;
+      Value : array (Entity) of Data_Type; --  with Volatile_Components;
       Has   : Entity_Set; --  FIXME: Backwards naming?
 
       procedure Set (E : in Entity; V : in Data_Type)

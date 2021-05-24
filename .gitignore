@@ -1,6 +1,7 @@
 obj/
-bin/
+*.exe
 src/models
 .vscode
 *.cgpr
 env.sh
+alire/*

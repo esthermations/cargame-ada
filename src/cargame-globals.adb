@@ -8,9 +8,6 @@ with Cargame.Renderer; use Cargame.Renderer;
 
 package body Cargame.Globals is
 
-   function Ready_To_Render return Boolean is
-      (Globals.Window.Object.Initialized and Globals.Shader.Initialized);
-
    --------------
    --  Window  --
    --------------
@@ -40,7 +37,7 @@ package body Cargame.Globals is
          else
             case Game_Action is
                when Quit => Globals.Window.Object.Set_Should_Close (True);
-               when others => null;
+               when others => null; --  Key not bound to anything
             end case;
          end if;
       end Key_Changed;
@@ -54,8 +51,7 @@ package body Cargame.Globals is
       begin
          Globals.Window.Width  := Glfw.Size (Width);
          Globals.Window.Height := Glfw.Size (Height);
-         Uniforms.Projection.Set_And_Send (Calculate_Projection);
-         GL.Window.Set_Viewport (0, 0, Int (Width), Int (Height));
+         Renderer.Handle_Window_Resize;
       end Size_Changed;
 
       -------------------------------------------------------------------------
@@ -82,19 +78,6 @@ package body Cargame.Globals is
       begin
          Globals.Mouse.Button_States (Button) := State;
       end Mouse_Button_Changed;
-
-      ----------------------------
-      --  Calculate_Projection  --
-      ----------------------------
-
-      function Calculate_Projection return Matrix4 is
-      begin
-         return Types.Perspective_Matrix
-            (View_Angle   => Types.Degrees (Globals.Vertical_FoV),
-             Aspect_Ratio => Window.Aspect_Ratio,
-             Near         => Globals.Near_Plane,
-             Far          => Globals.Far_Plane);
-      end Calculate_Projection;
 
    end Window;
 

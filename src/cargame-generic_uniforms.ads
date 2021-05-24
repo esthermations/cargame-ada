@@ -19,23 +19,30 @@ package Cargame.Generic_Uniforms is
    generic
       Name : String;
       type Uniform_Type is private;
-      with procedure Set_Procedure (U   : in Uniform;
-                                    Val : in Uniform_Type);
-   package Generic_Uniform with Abstract_State => State is
+      with procedure Set_Procedure (U : in Uniform; Val : in Uniform_Type);
+   package Generic_Uniform is
 
-      procedure Initialise (Shader : in Program);
-      procedure Initialise (Shader : in Program; Value : in Uniform_Type);
+      function  Have_Location return Boolean;
+      --  Do we have a location for this uniform in the shader? i.e., can we
+      --  send values to the shader to update it?
 
-      function  Initialised return Boolean;
+      procedure Find_Location (Shader : in Program)
+      --  Query the given shader for this uniform by name and cache the value.
+         with Pre  => Shader.Initialized,
+              Post => Have_Location;
 
-      function  Get return Uniform_Type;
+      function  Get_Location return GL.Uniforms.Uniform
+         with Pre => Have_Location;
 
-      procedure Set_And_Send        (Val : in Uniform_Type);
-      procedure Set_Without_Sending (Val : in Uniform_Type);
+      function  Get_Value return Uniform_Type;
+      procedure Set_Value (Val : in Uniform_Type);
 
-      procedure Send_To_GL;
+      procedure Set_And_Send (Val : in Uniform_Type)
+         with Pre => Have_Location;
 
-      function  Image return String;
+      procedure Send_To_GL
+      --  Perform the actual GL call to update this value in the shader.
+         with Pre => Have_Location;
 
    end Generic_Uniform;
 

@@ -26,19 +26,6 @@ package Cargame.Globals is
 
    Frame_Number    : Frame := Frames'First;
 
-   -----------------------
-   --  Rendering state  --
-   -----------------------
-
-   function Ready_To_Render return Boolean;
-
-   Shader            : GL.Objects.Programs.Program;
-
-   Background_Colour : constant Color := (0.1, 0.4, 0.4, 1.0);
-   Vertical_FoV      : constant       := 60.0;
-   Near_Plane        : constant       := 1.0;
-   Far_Plane         : constant       := 200.0;
-
    --------------------
    --  Window state  --
    --------------------
@@ -78,8 +65,6 @@ package Cargame.Globals is
 
       function Aspect_Ratio return Single is
          (Single (Width) / Single (Height)) with Inline;
-
-      function Calculate_Projection return Matrix4;
 
    end Window;
 

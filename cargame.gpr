@@ -1,5 +1,8 @@
-with "./dep/OpenGLAda/opengl";
-with "./dep/OpenGLAda/opengl-glfw";
+-- begin auto-gpr-with --
+--  This section was automatically added by Alire
+with "opengl-glfw.gpr";
+with "opengl.gpr";
+-- end auto-gpr-with --
 with "gnatcoll";
 
 project Cargame is
@@ -7,17 +10,24 @@ project Cargame is
   for Languages   use ("ada", "c");
   for Source_Dirs use ("src");
   for Object_Dir  use "obj";
-  for Exec_Dir    use "bin";
+  for Exec_Dir    use ".";
   for Main        use ("cargame-main.adb");
 
   for Create_Missing_Dirs use "True";
+
+  for Library_Options use ("-Lobj", "-shared");
+
+  package Builder is
+    for Executable ("cargame-main.adb") use "cargame";
+  end Builder;
 
   package Compiler is
     for Default_Switches ("c") use ("-O2", "-s", "-Wp,-w");
     for Default_Switches ("ada") use
       ("-gnatwa",   --  All warnings
        "-gnatVa",   --  All validity checks
-       "-gnatyg-I", --  Style checks (GNAT style) but allow 'in' on parameters
+       --  Style checks, see https://gcc.gnu.org/onlinedocs/gnat_ugn/Style-Checking.html
+       "-gnaty3aAbcdefhiklmprsStux",
        "-gnatm80",  --  Limit lines to 80 columns
        "-gnatyO",   --  Overriding subprograms must be marked as such
        "-gnata",    --  Enable assertions and contract checks
@@ -25,10 +35,4 @@ project Cargame is
       );
   end Compiler;
 
-  package Linker is
-    for Default_Switches ("Ada") use ("-Lobj", "-shared");
-  end Linker;
-
 end Cargame;
-
-

@@ -7,6 +7,7 @@ with GL.Objects.Textures;   use GL.Objects.Textures;
 with Cargame.Globals;
 with Cargame.Types;
 with Cargame.Vectors;       use Cargame.Vectors;
+with Cargame.Renderer;
 
 with GNATCOLL.Strings;      use GNATCOLL.Strings;
 
@@ -43,7 +44,7 @@ package Cargame.Obj_Parser is
 
    ---------------------------------------------------------------------------
    function Parse (File_Path : in String) return Obj_Data
-       with Pre  => Globals.Shader.Initialized,
+       with Pre  => Renderer.Initialised,
             Post => Is_Valid (Parse'Result);
 
 private

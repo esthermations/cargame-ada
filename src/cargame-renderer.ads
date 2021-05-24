@@ -16,10 +16,13 @@ with Cargame.Gameplay; use Cargame.Gameplay;
 package Cargame.Renderer is
 
    procedure Init;
+   --  Initialise the renderer state so we can start rendering Entities.
 
-   function Initialised return Boolean;
+   function  Initialised return Boolean;
 
    procedure Enqueue_For_Rendering (E : in Entity)
+   --  Call this if you'd like to render the given entity with the next call to
+   --  Render_Enqueued_Entities.
       with Pre => Initialised and
                   Components.Model.Has (E) and
                   Components.Rotation.Has (E) and
@@ -27,31 +30,33 @@ package Cargame.Renderer is
                   Components.Render_Scale.Has (E);
 
    procedure Render_Enqueued_Entities;
+   --  Call this to issue drawcalls for all enqueued entities. Clears the queue
+   --  when completed.
+
+   procedure Handle_Window_Resize;
+   --  Call this when the viewport has changed size.
+
+   -------------
+   --  Camera --
+   -------------
+
+   package Camera is
+      procedure Set_Position (Pos : in Valid_Vector3);
+      procedure Set_Target   (Tgt : in Valid_Vector3);
+      function  Get_Position return Valid_Vector3;
+      function  Get_Target   return Valid_Vector3;
+   end Camera;
+
+   ----------------
+   --  Uniforms  --
+   ----------------
 
    package Uniforms is
-
-      --  Set_Single(Some_Vector3) throws, for some reason. But
-      --  Set_Single(X,Y,Z) doesn't. So map the single-vector call to the one
-      --  that won't crash.
-      procedure Set_Vector3_Wrapper (U : in Uniform; Vec : in Vector3);
-
       pragma Style_Checks (Off);
-         package Projection         is new Generic_Uniform ("u_Projection"         , Matrix4, Set_Single);
-         package View_Matrix        is new Generic_Uniform ("u_Camera_Transform"   , Matrix4, Set_Single);
-         package Object_Transform   is new Generic_Uniform ("u_Object_Transform"   , Matrix4, Set_Single);
-         package Normal_Transform   is new Generic_Uniform ("u_Normal_Transform"   , Matrix3, Set_Single);
-
-         --  Material stuff
-         package Diffuse_Map        is new Generic_Uniform ("u_Diffuse_Map"        , Int    , Set_Int);
-         package Specular_Map       is new Generic_Uniform ("u_Specular_Map"       , Int    , Set_Int);
-         package Material_Ambient   is new Generic_Uniform ("u_Material_Ambient"   , Vector3, Set_Vector3_Wrapper);
-         package Material_Shininess is new Generic_Uniform ("u_Material_Shininess" , Single , Set_Single);
-         package Light_Position     is new Generic_Uniform ("u_Light_Position"     , Vector3, Set_Vector3_Wrapper);
-         package Light_Ambient      is new Generic_Uniform ("u_Light_Ambient"      , Vector3, Set_Vector3_Wrapper);
-         package Light_Diffuse      is new Generic_Uniform ("u_Light_Diffuse"      , Vector3, Set_Vector3_Wrapper);
-         package Light_Specular     is new Generic_Uniform ("u_Light_Specular"     , Vector3, Set_Vector3_Wrapper);
+         package Projection is new Generic_Uniform ("Projection", Matrix4, Set_Single);
+         package View       is new Generic_Uniform ("View"      , Matrix4, Set_Single);
+         package Model      is new Generic_Uniform ("Model"     , Matrix4, Set_Single);
       pragma Style_Checks (On);
-
    end Uniforms;
 
 end Cargame.Renderer;

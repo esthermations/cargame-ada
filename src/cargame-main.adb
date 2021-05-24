@@ -24,6 +24,7 @@ with Cargame.Types;             use Cargame.Types;
 with Cargame.Util;
 with Cargame.ECS;
 with Cargame.Renderer;
+with Cargame.Config;
 
 procedure Cargame.Main is
 
@@ -71,7 +72,7 @@ begin
    Make_Current (Globals.Window.Ptr);
    Set_Swap_Interval (0);
 
-   Set_Color_Clear_Value (Globals.Background_Colour);
+   Set_Color_Clear_Value (Config.Clear_Colour);
 
    Enable_Callbacks :
    declare
@@ -84,14 +85,18 @@ begin
       Object.Enable_Callback (Callbacks.Mouse_Button);
    end Enable_Callbacks;
 
+   ---------------------------
+   --  Initialise renderer  --
+   ---------------------------
+
    Cargame.Renderer.Init;
 
    ---------------------------
    --  Initialise entities  --
    ---------------------------
 
-   Player_Model   := Create_Model_From_Obj ("../src/models/Barrel02.obj");
-   Asteroid_Model := Create_Model_From_Obj ("../src/models/Barrel02.obj");
+   Player_Model   := Create_Model_From_Obj (Config.Player_Model_Path);
+   Asteroid_Model := Create_Model_From_Obj (Config.Asteroid_Model_Path);
 
    Player := ECS.New_Entity;
    Components.Controlled_By_Player.Set (Player, True);
@@ -129,20 +134,6 @@ begin
       Components.CamObj_Matrix.Set    (Asteroids (I), Identity4);
       Components.Normal_Matrix.Set    (Asteroids (I), Identity3);
    end loop;
-
-   ---------------------------
-   --  Initialise uniforms  --
-   ---------------------------
-
-   Util.Log ("Initialising uniforms.");
-
-   GL.Uniforms.Set_Single (Globals.Shader.Uniform_Location ("u_Projection"),
-                           Globals.Window.Calculate_Projection);
-
-   GL.Uniforms.Set_Single (Globals.Shader.Uniform_Location ("u_View"),
-                           Look_At (Camera_Pos => (0.0, 2.0, -2.0),
-                                    Target_Pos => Origin,
-                                    Up         => (0.0, 1.0, 0.0)));
 
    ----------------------
    --  Main game loop  --

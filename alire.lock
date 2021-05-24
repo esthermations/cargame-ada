@@ -1,0 +1,109 @@
+# THIS IS A MACHINE-GENERATED FILE. DO NOT EDIT MANUALLY.
+
+[solution]
+[solution.context]
+solved = true
+[[solution.state]]
+crate = "libglfw3"
+fulfilment = "solved"
+pinned = false
+transitivity = "indirect"
+versions = "^3"
+[solution.state.release]
+description = "Portable library for OpenGL, window and input"
+maintainers = [
+"alejandro@mosteo.com",
+]
+maintainers-logins = [
+"mosteo",
+]
+name = "libglfw3"
+notes = "Provided by system package: mingw-w64-x86_64-glfw"
+version = "3.3.2"
+[solution.state.release.origin]
+url = "system:mingw-w64-x86_64-glfw"
+[[solution.state]]
+crate = "openglada"
+fulfilment = "solved"
+pinned = false
+transitivity = "direct"
+versions = "~0.9.0"
+[solution.state.release]
+authors = [
+"Felix Krause",
+]
+description = "Thick Ada binding for OpenGL"
+licenses = "MIT"
+maintainers = [
+"Felix Krause <contact@flyx.org>",
+]
+maintainers-logins = [
+"flyx",
+]
+name = "openglada"
+project-files = [
+"opengl.gpr",
+]
+tags = [
+"opengl",
+"binding",
+"rendering",
+"graphics",
+]
+version = "0.9.0"
+website = "http://flyx.github.io/OpenGLAda/"
+[solution.state.release.gpr-externals]
+Auto_Exceptions = [
+"enabled",
+"disabled",
+]
+Mode = [
+"debug",
+"release",
+]
+[solution.state.release.gpr-set-externals]
+Windowing_System = "windows"
+[solution.state.release.origin]
+hashes = [
+"sha512:4deb7effa92ea06c1fc9595700223b8169a85c15c4caf78221d2cfa95205260b5ba6d132d070b3f25d07549a6c9a8cde3b6405631a7d1ff487af8292c44a10e2",
+]
+url = "https://github.com/flyx/OpenGLAda/releases/download/v0.9.0/openglada-0.9.0.tgz"
+[[solution.state]]
+crate = "openglada_glfw"
+fulfilment = "solved"
+pinned = false
+transitivity = "direct"
+versions = "~0.9.0"
+[solution.state.release]
+authors = [
+"Felix Krause",
+]
+description = "GLFW binding for use with OpenGLAda"
+licenses = "MIT"
+maintainers = [
+"Felix Krause <contact@flyx.org>",
+]
+maintainers-logins = [
+"flyx",
+]
+name = "openglada_glfw"
+project-files = [
+"opengl-glfw.gpr",
+]
+tags = [
+"opengl",
+"glfw",
+"binding",
+"gui",
+]
+version = "0.9.0"
+website = "http://flyx.github.io/OpenGLAda/"
+[solution.state.release.origin]
+hashes = [
+"sha512:fc25165caf510898d8c804b0ca4d8f763d49e0bd144ac70a2547f935ee90804b6ea5a1389eee08bb5528546f87eedb5b4e5884360a3a562a57338acea95f0e91",
+]
+url = "https://github.com/flyx/OpenGLAda/releases/download/v0.9.0/openglada_glfw-0.9.0.tgz"
+[[solution.state.release.depends-on]]
+libglfw3 = "^3"
+openglada = "~0.9.0"
+

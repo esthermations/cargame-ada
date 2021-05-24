@@ -64,7 +64,7 @@ package body Cargame.ECS is
    --  Declarations
 
    package Systems is
-      procedure Tick_View_Matrix;
+      procedure Tick_Camera;
       procedure Tick_Position;
       procedure Tick_Rotation;
       procedure Tick_Object_Matrix;
@@ -73,15 +73,14 @@ package body Cargame.ECS is
 
    package body Systems is
 
-      procedure Tick_View_Matrix is
+      procedure Tick_Camera is
          Pos : constant Valid_Vector3 :=
             Position.Value (Cargame.Gameplay.Player);
       begin
-         Uniforms.View_Matrix.Set_Without_Sending
-            (Look_At (Camera_Pos => (Pos + Vector3'(0.0, 2.0, -2.0)),
-                      Target_Pos => (Pos + Vector3'(0.0, 0.0, +2.0)),
-                      Up         => (Y => 1.0, others => 0.0)));
-      end Tick_View_Matrix;
+         --  FIXME: These offsets should be configurable in Cargame.Config
+         Renderer.Camera.Set_Position (Pos + Vector3'(0.0, 2.0, -2.0));
+         Renderer.Camera.Set_Target   (Pos + Vector3'(0.0, 0.0, +2.0));
+      end Tick_Camera;
 
       procedure Tick_Position is
          Update : constant Entity_Set := Union ((Position.Q, Velocity.Q));
@@ -105,7 +104,6 @@ package body Cargame.ECS is
       procedure Tick_Object_Matrix is
          Update : constant Entity_Set :=
             Union ((Position.Q, Render_Scale.Q, Rotation.Q));
-
       begin
          for E in Entity loop
             if Update (E) then
@@ -119,7 +117,6 @@ package body Cargame.ECS is
                end;
             end if;
          end loop;
-
       end Tick_Object_Matrix;
 
       procedure Render is
@@ -149,7 +146,7 @@ package body Cargame.ECS is
       --  just by arranging these function calls. Maybe we could do something
       --  cleverer.
 
-      Systems.Tick_View_Matrix;
+      Systems.Tick_Camera;
       Systems.Tick_Position;
       Systems.Tick_Rotation;
       Systems.Tick_Object_Matrix;
