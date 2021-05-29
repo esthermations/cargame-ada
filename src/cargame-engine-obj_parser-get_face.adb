@@ -1,4 +1,4 @@
-separate (Cargame.Obj_Parser)
+separate (Cargame.Engine.Obj_Parser)
 function Get_Face (Split_Line : in XString_Array) return Face is
 
    ----------------------------------------------------------------------------

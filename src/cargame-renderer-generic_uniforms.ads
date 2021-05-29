@@ -1,12 +1,8 @@
-with GL;
+with GL;                  use GL;
 with GL.Uniforms;
-with GL.Objects.Programs;
+with GL.Objects.Programs; use GL.Objects.Programs;
 
-package Cargame.Generic_Uniforms is
-
-   use GL;
-   use GL.Uniforms;
-   use GL.Objects.Programs;
+package Cargame.Renderer.Generic_Uniforms with Elaborate_Body is
 
    --  This is derived from the Uniform implementation from AdaDoom3. It was
    --  cleverer than mine so I'm using it.
@@ -46,4 +42,4 @@ package Cargame.Generic_Uniforms is
 
    end Generic_Uniform;
 
-end Cargame.Generic_Uniforms;
+end Cargame.Renderer.Generic_Uniforms;

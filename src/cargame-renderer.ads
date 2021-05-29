@@ -1,12 +1,10 @@
 with GL;
-with GL.Uniforms;              use GL.Uniforms;
-with GL.Types;                 use GL.Types; use GL.Types.Singles;
+with GL.Uniforms;                    use GL.Uniforms;
+with GL.Types;                       use GL.Types; use GL.Types.Singles;
 
-with Cargame.Types;            use Cargame.Types;
-with Cargame.Generic_Uniforms; use Cargame.Generic_Uniforms;
-
-with Cargame.ECS;      use Cargame.ECS;
-with Cargame.Gameplay; use Cargame.Gameplay;
+with Cargame.Types;                  use Cargame.Types;
+with Cargame.Engine.ECS;             use Cargame.Engine.ECS;
+with Cargame.Gameplay;
 
 --  esthero:
 --
@@ -24,10 +22,10 @@ package Cargame.Renderer is
    --  Call this if you'd like to render the given entity with the next call to
    --  Render_Enqueued_Entities.
       with Pre => Initialised and
-                  Components.Model.Has (E) and
-                  Components.Rotation.Has (E) and
-                  Components.Position.Has (E) and
-                  Components.Render_Scale.Has (E);
+                  Gameplay.Components.Model.Has (E) and
+                  Gameplay.Components.Rotation.Has (E) and
+                  Gameplay.Components.Position.Has (E) and
+                  Gameplay.Components.Render_Scale.Has (E);
 
    procedure Render_Enqueued_Entities;
    --  Call this to issue drawcalls for all enqueued entities. Clears the queue
@@ -46,17 +44,5 @@ package Cargame.Renderer is
       function  Get_Position return Valid_Vector3;
       function  Get_Target   return Valid_Vector3;
    end Camera;
-
-   ----------------
-   --  Uniforms  --
-   ----------------
-
-   package Uniforms is
-      pragma Style_Checks (Off);
-         package Projection is new Generic_Uniform ("Projection", Matrix4, Set_Single);
-         package View       is new Generic_Uniform ("View"      , Matrix4, Set_Single);
-         package Model      is new Generic_Uniform ("Model"     , Matrix4, Set_Single);
-      pragma Style_Checks (On);
-   end Uniforms;
 
 end Cargame.Renderer;

@@ -10,7 +10,7 @@ with Cargame.Util;
 
 --  This is just a non-comprehensive wrapper around stb_image.h.
 
-package body Cargame.Texture_Loader is
+package body Cargame.Engine.Texture_Loader is
    use GL.Types;
    use Interfaces.C.Strings;
    use GL.Objects.Textures.Targets;
@@ -63,12 +63,6 @@ package body Cargame.Texture_Loader is
 
       Free (Filename_C);
 
-      --   Put_Line ("Loaded image with ("
-      --                & "Width => "      & Int'Image (Width)
-      --                & ", Height => "   & Int'Image (Height)
-      --                & ", Channels => " & Int'Image (Channels_In_File)
-      --                & ")");
-
       pragma Assert (Width > 0 and Height > 0 and Channels_In_File > 0,
                      "STBI_Load error: " &
                         (if STBI_Failure_Reason /= Null_Ptr
@@ -100,4 +94,4 @@ package body Cargame.Texture_Loader is
       return Ret;
    end Load_Texture;
 
-end Cargame.Texture_Loader;
+end Cargame.Engine.Texture_Loader;

@@ -6,33 +6,19 @@ with Ada.Text_IO;             use Ada.Text_IO;
 with GL;
 with GL.Objects.Textures;
 
-with Cargame.Obj_Parser;
+with Cargame.Engine.Obj_Parser;
 with Cargame.Util; use Cargame.Util;
 
-package body Cargame.Models is
-
-   ----------------------------------------------------------------------------
-   function All_Members_Are_Valid (Arr : in Vector3_Array) return Boolean is
-      (for all V of Arr => (for all X of V => X'Valid));
-
-   ----------------------------------------------------------------------------
-   function All_Members_Are_Valid (Arr : in Vector2_Array) return Boolean is
-      (for all V of Arr => (for all X of V => X'Valid));
+package body Cargame.Engine.Models is
 
    ----------------------------------------------------------------------------
    function Is_Renderable (M : Model) return Boolean is
       Has_Valid_VAO : constant Boolean := (M.Vao /= Null_Array_Object);
       Has_Materials : constant Boolean := (M.Materials.Length /= 0);
    begin
-      if Has_Valid_VAO and Has_Materials then
-         return True;
-      else
-         Util.Log_Error ("Model isn't renderable:");
-         Util.Log_Error ("Has_Valid_VAO = " & Boolean'Image (Has_Valid_VAO));
-         Util.Log_Error ("Has_Materials = " & Boolean'Image (Has_Materials));
-         Util.Log ("All the above must be true for it to be renderable.");
-         return False;
-      end if;
+      pragma Assert (Has_Valid_VAO);
+      pragma Assert (Has_Materials);
+      return True;
    end Is_Renderable;
 
    ----------------------------------------------------------------------------
@@ -170,7 +156,9 @@ package body Cargame.Models is
    end Create_Model;
 
    ----------------------------------------------------------------------------
-   function Create_Model_From_Obj (Obj_File_Path : in String) return Model is
+   function Create_Model_From_Obj (Obj_File_Path : in String)
+      return Model
+   is
 
       --  This function's main job is to deduplicate the data received from the
       --  obj parser to suit the layout required by glDrawElements. Each unique
@@ -178,8 +166,8 @@ package body Cargame.Models is
       --  something like a vertex, normal, texcoord, etc. In this case, we're
       --  only dealing with those three.
 
-      Obj : constant Cargame.Obj_Parser.Obj_Data :=
-         Cargame.Obj_Parser.Parse (Obj_File_Path);
+      use Cargame.Engine.Obj_Parser;
+      Obj : constant Obj_Data := Parse (Obj_File_Path);
 
       subtype Attribute_Index is GL.Types.Size;
 
@@ -189,14 +177,22 @@ package body Cargame.Models is
          procedure Add (V, N : in Vector3; T : in Vector2);
 
          --  Outputs:
-         function Get_Vertices return Vector3_Array with
-            Pre => Attributes_Are_Valid;
-         function Get_Normals  return Vector3_Array with
-            Pre => Attributes_Are_Valid;
-         function Get_TexCrds  return Vector2_Array with
-            Pre => Attributes_Are_Valid;
-         function Get_Indices  return Int_Array     with
-            Pre => Attributes_Are_Valid;
+
+         function Get_Vertices
+            return Vector3_Array
+            with Pre => Attributes_Are_Valid;
+
+         function Get_Normals
+            return Vector3_Array
+            with Pre => Attributes_Are_Valid;
+
+         function Get_TexCrds
+            return Vector2_Array
+            with Pre => Attributes_Are_Valid;
+
+         function Get_Indices
+            return Int_Array
+            with Pre => Attributes_Are_Valid;
 
          function Attributes_Are_Valid return Boolean with Ghost;
          --  For preconditions only.
@@ -339,4 +335,4 @@ package body Cargame.Models is
 
    end Create_Model_From_Obj;
 
-end Cargame.Models;
+end Cargame.Engine.Models;

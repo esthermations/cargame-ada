@@ -11,7 +11,7 @@ with Cargame.Renderer;
 
 with GNATCOLL.Strings;      use GNATCOLL.Strings;
 
-package Cargame.Obj_Parser is
+package Cargame.Engine.Obj_Parser is
 
    use GL;
    use GL.Types;
@@ -80,4 +80,4 @@ private
    procedure Next_Significant_Line (File : in File_Type; Line : out XString)
       with Post => (if Line.Length = 0 then End_Of_File (File));
 
-end Cargame.Obj_Parser;
+end Cargame.Engine.Obj_Parser;

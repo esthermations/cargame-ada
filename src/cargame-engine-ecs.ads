@@ -1,6 +1,6 @@
 with Cargame.Config;
 
-package Cargame.ECS is
+package Cargame.Engine.ECS is
 
    --------------
    --  Entity  --
@@ -53,4 +53,4 @@ package Cargame.ECS is
 
    procedure Run_All_Systems;
 
-end Cargame.ECS;
+end Cargame.Engine.ECS;

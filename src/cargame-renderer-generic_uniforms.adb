@@ -1,4 +1,4 @@
-package body Cargame.Generic_Uniforms is
+package body Cargame.Renderer.Generic_Uniforms is
 
    package body Generic_Uniform is
       Location : Uniform := -1;
@@ -35,4 +35,4 @@ package body Cargame.Generic_Uniforms is
 
    end Generic_Uniform;
 
-end Cargame.Generic_Uniforms;
+end Cargame.Renderer.Generic_Uniforms;

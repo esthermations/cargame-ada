@@ -1,7 +1,7 @@
-with Cargame.Quaternions;
-with Ada.Numerics.Generic_Real_Arrays;
-with Cargame.Util; use Cargame.Util;
 with Interfaces;
+with Ada.Numerics.Generic_Real_Arrays;
+with Cargame.Quaternions;
+with Cargame.Util;        use Cargame.Util;
 
 package body Cargame.Types is
 

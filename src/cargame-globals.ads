@@ -63,13 +63,15 @@ package Cargame.Globals is
       Width  : Glfw.Size := 1280;
       Height : Glfw.Size := 720;
 
-      function Aspect_Ratio return Single is
-         (Single (Width) / Single (Height)) with Inline;
+      function Aspect_Ratio
+         return Single
+         is (Single (Width) / Single (Height));
 
    end Window;
 
-   ----------------------------------------------------------------------------
-   --  Input state
+   -------------------
+   --  Input state  --
+   -------------------
 
    package Mouse is
       X, Y : Glfw.Input.Mouse.Coordinate;

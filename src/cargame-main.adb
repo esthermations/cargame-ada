@@ -1,32 +1,35 @@
 with Ada.Command_Line;
 with Ada.Directories;
-with Ada.Real_Time;             use Ada.Real_Time;
-with Ada.Text_IO;               use Ada.Text_IO;
+with Ada.Real_Time;                           use Ada.Real_Time;
+with Ada.Text_IO;                             use Ada.Text_IO;
 with Ada.Numerics.Float_Random;
 
-with GL;                        use GL;
-with GL.Buffers;                use GL.Buffers;
-with GL.Objects.Programs;       use GL.Objects.Programs;
+with GL;                                      use GL;
+with GL.Buffers;                              use GL.Buffers;
+with GL.Objects.Programs;                     use GL.Objects.Programs;
 with GL.Objects.Textures;
-with GL.Types;                  use GL.Types; use GL.Types.Singles;
+with GL.Types;                                use GL.Types;
 with GL.Uniforms;
 
 with Glfw;
-with Glfw.Input;                use Glfw.Input;
+with Glfw.Input;                              use Glfw.Input;
 with Glfw.Windows;
-with Glfw.Windows.Context;      use Glfw.Windows.Context;
-with Glfw.Windows.Hints;        use Glfw.Windows.Hints;
+with Glfw.Windows.Context;                    use Glfw.Windows.Context;
+with Glfw.Windows.Hints;                      use Glfw.Windows.Hints;
 
-with Cargame.Globals;
-with Cargame.Gameplay;          use Cargame.Gameplay;
-with Cargame.Models;            use Cargame.Models;
-with Cargame.Types;             use Cargame.Types;
-with Cargame.Util;
-with Cargame.ECS;
-with Cargame.Renderer;
 with Cargame.Config;
+with Cargame.Globals;
+with Cargame.Gameplay;                        use Cargame.Gameplay;
+with Cargame.Types;                           use Cargame.Types;
+with Cargame.Util;
+with Cargame.Engine.ECS;
+with Cargame.Engine.Models;                   use Cargame.Engine.Models;
+
+with Cargame.Renderer;
 
 procedure Cargame.Main is
+
+   use GL.Types.Singles;
 
    --  Timings
 

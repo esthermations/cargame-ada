@@ -11,7 +11,7 @@ with GL.Objects.Textures;
 
 with Glfw.Windows.Context;
 
-package body Cargame.ECS is
+package body Cargame.Engine.ECS is
 
    use Cargame.Gameplay.Components;
 
@@ -157,4 +157,4 @@ package body Cargame.ECS is
 
    end Run_All_Systems;
 
-end Cargame.ECS;
+end Cargame.Engine.ECS;

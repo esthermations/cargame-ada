@@ -5,11 +5,10 @@ with Ada.Characters.Handling;
 with Ada.Unchecked_Conversion;
 
 with GL;                            use GL;
-with Cargame.Obj_Parser.Mtl_Parser; use Cargame.Obj_Parser.Mtl_Parser;
 
 with Cargame.Util;                  use Cargame.Util;
 
-package body Cargame.Obj_Parser is
+package body Cargame.Engine.Obj_Parser is
 
    --------------------
    --  Declarations  --
@@ -17,25 +16,39 @@ package body Cargame.Obj_Parser is
 
    type Face is array (Integer range <>) of Face_Component;
 
-   function Get_Face (Split_Line : in XString_Array) return Face
+   function Get_Face (Split_Line : in XString_Array)
+      return Face
       with Pre     => Split_Line (1) = "f",
            Post    => Get_Face'Result'Length = (Split_Line'Length - 1),
            Global  => null,
            Depends => (Get_Face'Result => Split_Line);
 
-   function Convert_Into_Triangles (F : in Face) return Face
+   function Convert_Into_Triangles (F : in Face)
+      return Face
       with Pre     => F'Length >= 3, --  We can't turn a line into a triangle
            Post    => Convert_Into_Triangles'Result'Length >= F'Length,
            Global  => null,
            Depends => (Convert_Into_Triangles'Result => F);
 
+   function Parse_Mtl (Mtl_File_Path : in String)
+      return Vector_Of_Material
+      with Post => Parse_Mtl'Result.Length /= 0;
+
    -------------------
    --  Definitions  --
    -------------------
 
-   function Get_Face (Split_Line : in XString_Array) return Face is separate;
+   function Get_Face (Split_Line : in XString_Array)
+      return Face
+      is separate;
 
-   function Convert_Into_Triangles (F : in Face) return Face is separate;
+   function Convert_Into_Triangles (F : in Face)
+      return Face
+      is separate;
+
+   function Parse_Mtl (Mtl_File_Path : in String)
+      return Vector_Of_Material
+      is separate;
 
    procedure Next_Significant_Line (File : in File_Type; Line : out XString)
    is
@@ -73,7 +86,9 @@ package body Cargame.Obj_Parser is
    --  Parse  --
    -------------
 
-   function Parse (File_Path : in String) return Obj_Data is
+   function Parse (File_Path : in String)
+      return Obj_Data
+   is
       Ret : Obj_Data; --  Return value
 
       --  Unique vertices as specified in the obj file, irrespective of faces.
@@ -320,4 +335,4 @@ package body Cargame.Obj_Parser is
       return Valid;
    end Is_Valid;
 
-end Cargame.Obj_Parser;
+end Cargame.Engine.Obj_Parser;

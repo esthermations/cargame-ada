@@ -8,7 +8,7 @@
 --  resulting Face will have quite a few more Face_Components in it. It's quite
 --  a naive transformation.
 
-separate (Cargame.Obj_Parser)
+separate (Cargame.Engine.Obj_Parser)
 function Convert_Into_Triangles (F : in Face) return Face is
 begin
 

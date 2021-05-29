@@ -28,11 +28,11 @@ package body Cargame.Util is
    ----------------------------------------------------------------------------
    function Abbreviate_Context (Ctx : in String) return String is
       use GNATCOLL.Strings;
-      Context : XString;
-      Colour : Text_Colour;
+      Context       : XString;
+      Colour        : Text_Colour;
       Split_Context : XString_Array (1 .. 10);
-      Split_Last : Positive;
-      Module : XString;
+      Split_Last    : Positive;
+      Module        : XString;
    begin
       Module.Set ("Cargame");
 

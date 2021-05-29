@@ -16,30 +16,23 @@ package Cargame.Vectors is
    -- Vector types --
    ------------------
 
-   package Single_Vectors is new
-      Ada.Containers.Vectors (GL.Types.Size, Single);
-   package Vector2_Vectors is new
-      Ada.Containers.Vectors (GL.Types.Size, Vector2);
-   package Vector3_Vectors is new
-      Ada.Containers.Vectors (GL.Types.Size, Vector3);
-   package Int_Vectors is new
-      Ada.Containers.Vectors (GL.Types.Size, Int);
-   package UInt_Vectors is new
-      Ada.Containers.Vectors (GL.Types.Size, UInt);
-   package Size_Vectors is new
-      Ada.Containers.Vectors (GL.Types.Size, GL.Types.Size);
-   package Texture_Vectors is new
-      Ada.Containers.Vectors (GL.Types.Size, GL.Objects.Textures.Texture);
-   package Radians_Vectors is new
-      Ada.Containers.Vectors (GL.Types.Size, Cargame.Types.Radians);
-   package Material_Vectors is new
-      Ada.Containers.Vectors (GL.Types.Size, Cargame.Types.Material);
-   package Matrix3_Vectors is new
-      Ada.Containers.Vectors (GL.Types.Size, Matrix3);
-   package Matrix4_Vectors is new
-      Ada.Containers.Vectors (GL.Types.Size, Matrix4);
-   package Face_Component_Vectors is new
-      Ada.Containers.Vectors (GL.Types.Size, Face_Component);
+   package C renames Ada.Containers;
+   subtype S is GL.Types.Size;
+
+   pragma Style_Checks (Off);
+      package Single_Vectors         is new C.Vectors (S, Single);
+      package Vector2_Vectors        is new C.Vectors (S, Vector2);
+      package Vector3_Vectors        is new C.Vectors (S, Vector3);
+      package Int_Vectors            is new C.Vectors (S, Int);
+      package UInt_Vectors           is new C.Vectors (S, UInt);
+      package Size_Vectors           is new C.Vectors (S, GL.Types.Size);
+      package Texture_Vectors        is new C.Vectors (S, GL.Objects.Textures.Texture);
+      package Radians_Vectors        is new C.Vectors (S, Cargame.Types.Radians);
+      package Material_Vectors       is new C.Vectors (S, Cargame.Types.Material);
+      package Matrix3_Vectors        is new C.Vectors (S, Matrix3);
+      package Matrix4_Vectors        is new C.Vectors (S, Matrix4);
+      package Face_Component_Vectors is new C.Vectors (S, Face_Component);
+   pragma Style_Checks (On);
 
    subtype Vector_Of_Single         is Single_Vectors.Vector;
    subtype Vector_Of_Vector2        is Vector2_Vectors.Vector;
@@ -76,5 +69,13 @@ package Cargame.Vectors is
       array (GL.Types.Size range <>) of aliased Matrix4;
    type Array_Of_Face_Component is
       array (GL.Types.Size range <>) of aliased Face_Component;
+
+   function All_Members_Are_Valid (Arr : in Vector3_Array)
+      return Boolean
+      is (for all V of Arr => (for all X of V => X'Valid));
+
+   function All_Members_Are_Valid (Arr : in Vector2_Array)
+      return Boolean
+      is (for all V of Arr => (for all X of V => X'Valid));
 
 end Cargame.Vectors;

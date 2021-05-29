@@ -83,7 +83,8 @@ package Cargame.Types is
       return Matrix4;
 
    function Perspective_Matrix (Top, Bottom, Left, Right, Near, Far : Single)
-       return Matrix4;
+       return Matrix4
+       with Pre => Near > 0.0 and Far > Near;
 
    function Perspective_Matrix (View_Angle              : Degrees;
                                 Aspect_Ratio, Near, Far : Single)

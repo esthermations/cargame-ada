@@ -1,7 +1,6 @@
 --  copied wholesale from OpenGLAda/examples/common/quaternions.ads
 generic
    type Real is digits <>;
-
 package Cargame.Quaternions is
    pragma Elaborate_Body;
 

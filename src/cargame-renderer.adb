@@ -7,9 +7,11 @@ with GL.Toggles;
 with GL.Window;
 
 with Cargame.Config;
-with Cargame.Models;
 with Cargame.Globals;
+with Cargame.Engine.Models;
 with Cargame.Util;
+
+with Cargame.Renderer.Uniforms;
 
 package body Cargame.Renderer is
 
@@ -23,12 +25,15 @@ package body Cargame.Renderer is
 
    --  Internal function declarations
 
-   procedure Internal_Render (E : in ECS.Entity);
-   function  Internal_Calculate_Projection return Matrix4;
+   procedure Internal_Render (E : in Entity);
+   function  Internal_Calculate_Projection
+      return Matrix4;
 
    --  Function definitions
 
-   function Initialised return Boolean is (Program.Initialized);
+   function Initialised
+      return Boolean
+      is (Program.Initialized);
 
    ------------
    --  Init  --
@@ -81,9 +86,9 @@ package body Cargame.Renderer is
 
       Util.Log ("Shader loaded.");
 
-      Uniforms.Projection.Find_Location (Program);
-      Uniforms.View.Find_Location       (Program);
-      Uniforms.Model.Find_Location      (Program);
+      Cargame.Renderer.Uniforms.Projection.Find_Location (Program);
+      Cargame.Renderer.Uniforms.View.Find_Location       (Program);
+      Cargame.Renderer.Uniforms.Model.Find_Location      (Program);
 
       Projection_Matrix_Needs_Update := True;
       View_Matrix_Needs_Update       := True;
@@ -111,7 +116,8 @@ package body Cargame.Renderer is
 
       --  Update Projection, if needed
       if Projection_Matrix_Needs_Update then
-         Uniforms.Projection.Set_And_Send (Internal_Calculate_Projection);
+         Cargame.Renderer.Uniforms.Projection.Set_And_Send
+            (Internal_Calculate_Projection);
          GL.Window.Set_Viewport
             (0, 0, Int (Globals.Window.Width), Int (Globals.Window.Height));
       end if;
@@ -140,11 +146,13 @@ package body Cargame.Renderer is
    --  Internal_Render  --
    -----------------------
 
-   procedure Internal_Render (E : in ECS.Entity) is
-      M   : constant Cargame.Models.Model := Components.Model.Value (E);
-      Pos : constant Valid_Vector3        := Components.Position.Value (E);
-      Rot : constant Radians              := Components.Rotation.Value (E);
-      Scl : constant Single               := Components.Render_Scale.Value (E);
+   procedure Internal_Render (E : in Entity) is
+      use Cargame.Engine.Models;
+      use Cargame.Gameplay;
+      M   : constant Model         := Components.Model.Value (E);
+      Pos : constant Valid_Vector3 := Components.Position.Value (E);
+      Rot : constant Radians       := Components.Rotation.Value (E);
+      Scl : constant Single        := Components.Render_Scale.Value (E);
 
       Transform : constant Matrix4 :=
          Translate (Rotate (Scale (Identity4, Scl), Rot), Pos);
@@ -168,7 +176,9 @@ package body Cargame.Renderer is
    --  Internal_Calculate_Projection  --
    -------------------------------------
 
-   function Internal_Calculate_Projection return Matrix4 is
+   function Internal_Calculate_Projection
+      return Matrix4
+   is
    begin
       return Types.Perspective_Matrix
          (View_Angle   => Types.Degrees (Config.Vertical_FoV),
