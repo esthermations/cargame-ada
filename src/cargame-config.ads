@@ -17,6 +17,9 @@ package Cargame.Config is
    --  is preallocated, so if you set this too high the program may crash.
    --  Hooray!
 
+   Max_Systems  : constant := 10;
+   --  Maximum number of systems the ECS will allow you to register.
+
    Initial_Camera_Position : constant Vector3 := (0.0, 2.0, -2.0);
    Initial_Camera_Target   : constant Vector3 := (0.0, 0.0, 0.0);
    Up_Vector               : constant Vector3 := (0.0, 1.0, 0.0);

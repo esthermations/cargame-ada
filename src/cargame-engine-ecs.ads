@@ -51,6 +51,10 @@ package Cargame.Engine.ECS is
    --  Systems  --
    ---------------
 
-   procedure Run_All_Systems;
+   package Systems is
+      type System is access procedure;
+      procedure Register_System (S : in System);
+      procedure Run_All_Systems;
+   end Systems;
 
 end Cargame.Engine.ECS;

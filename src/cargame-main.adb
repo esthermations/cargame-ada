@@ -20,6 +20,9 @@ with Glfw.Windows.Hints;                      use Glfw.Windows.Hints;
 with Cargame.Config;
 with Cargame.Globals;
 with Cargame.Gameplay;                        use Cargame.Gameplay;
+with Cargame.Gameplay.Systems;
+with Cargame.Gameplay.Components;
+
 with Cargame.Types;                           use Cargame.Types;
 with Cargame.Util;
 with Cargame.Engine.ECS;
@@ -138,6 +141,24 @@ begin
       Components.Normal_Matrix.Set    (Asteroids (I), Identity3);
    end loop;
 
+   -----------------------
+   --  Set ECS Systems  --
+   -----------------------
+
+   declare
+      package ECS renames Cargame.Engine.ECS;
+      use Cargame.Gameplay.Systems;
+   begin
+      --  NOTE: The dependency ordering of these systems is manually set here
+      --  just by arranging these function calls. Maybe we could do something
+      --  cleverer.
+      ECS.Systems.Register_System (Tick_Camera'Access);
+      ECS.Systems.Register_System (Tick_Position'Access);
+      ECS.Systems.Register_System (Tick_Rotation'Access);
+      ECS.Systems.Register_System (Tick_Object_Matrix'Access);
+      ECS.Systems.Register_System (Render'Access);
+   end;
+
    ----------------------
    --  Main game loop  --
    ----------------------
@@ -164,8 +185,12 @@ begin
       Globals.Frame_Number := @ + 1;
 
       Glfw.Input.Poll_Events;
-      ECS.Run_All_Systems;
+
+      ECS.Systems.Run_All_Systems;
+
+      Renderer.Clear_Back_Buffer;
       Renderer.Render_Enqueued_Entities;
+      Renderer.Swap_Buffers;
 
       -----------------------------
       --  Performance analytics  --

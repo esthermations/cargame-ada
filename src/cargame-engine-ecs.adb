@@ -1,7 +1,5 @@
 with Cargame.Globals;  use Cargame.Globals;
-with Cargame.Gameplay; use Cargame.Gameplay;
 with Cargame.Types;    use Cargame.Types;
-with Cargame.Renderer; use Cargame.Renderer;
 
 with GL;               use GL;
 with GL.Types;         use GL.Types;          use GL.Types.Singles;
@@ -12,8 +10,6 @@ with GL.Objects.Textures;
 with Glfw.Windows.Context;
 
 package body Cargame.Engine.ECS is
-
-   use Cargame.Gameplay.Components;
 
    function Union (Sets : in Entity_Sets) return Entity_Set is
    begin
@@ -61,100 +57,28 @@ package body Cargame.Engine.ECS is
    --  Systems  --
    ---------------
 
-   --  Declarations
-
-   package Systems is
-      procedure Tick_Camera;
-      procedure Tick_Position;
-      procedure Tick_Rotation;
-      procedure Tick_Object_Matrix;
-      procedure Render;
-   end Systems;
-
    package body Systems is
+      type Array_Of_System
+         is array (Positive range 1 .. Config.Max_Systems)
+         of System;
 
-      procedure Tick_Camera is
-         Pos : constant Valid_Vector3 :=
-            Position.Value (Cargame.Gameplay.Player);
-      begin
-         --  FIXME: These offsets should be configurable in Cargame.Config
-         Renderer.Camera.Set_Position (Pos + Vector3'(0.0, 2.0, -2.0));
-         Renderer.Camera.Set_Target   (Pos + Vector3'(0.0, 0.0, +2.0));
-      end Tick_Camera;
+      Registered_Systems : Array_Of_System;
+      Last_System_Index  : Positive := Registered_Systems'First;
 
-      procedure Tick_Position is
-         Update : constant Entity_Set := Union ((Position.Q, Velocity.Q));
+      procedure Register_System (S : in System) is
       begin
-         Position.Value := (for E in Entity =>
-                              (if Update (E)
-                               then @ (E) + Velocity.Value (E)
-                               else @ (E)));
-      end Tick_Position;
+         pragma Assert (Last_System_Index <= Config.Max_Systems);
+         Registered_Systems (Last_System_Index) := S;
+         Last_System_Index := @ + 1;
+      end Register_System;
 
-      procedure Tick_Rotation is
-         Update : constant Entity_Set :=
-            Union ((Rotation.Q, Rotational_Speed.Q));
+      procedure Run_All_Systems is
       begin
-         Rotation.Value := (for E in Entity =>
-                              (if Update (E)
-                               then @ (E) + Rotational_Speed.Value (E)
-                               else @ (E)));
-      end Tick_Rotation;
-
-      procedure Tick_Object_Matrix is
-         Update : constant Entity_Set :=
-            Union ((Position.Q, Render_Scale.Q, Rotation.Q));
-      begin
-         for E in Entity loop
-            if Update (E) then
-               declare
-                  Mtx : Matrix4 := Components.Object_Matrix.Value (E);
-               begin
-                  Scale     (Mtx, Components.Render_Scale.Value (E));
-                  Rotate    (Mtx, Components.Rotation.Value (E));
-                  Translate (Mtx, Components.Position.Value (E));
-                  Object_Matrix.Value (E) := Mtx;
-               end;
-            end if;
+         for Sys of Registered_Systems (1 .. Last_System_Index) loop
+            Sys.all; --  This is a procedure call.
          end loop;
-      end Tick_Object_Matrix;
-
-      procedure Render is
-         Should_Render : constant Entity_Set :=
-            Union ((Model.Q, Rotation.Q, Position.Q, Render_Scale.Q));
-      begin
-         for E in Entity loop
-            if Should_Render (E) then
-               Cargame.Renderer.Enqueue_For_Rendering (E);
-            end if;
-         end loop;
-      end Render;
+      end Run_All_Systems;
 
    end Systems;
-
-   -----------------------
-   --  Run_All_Systems  --
-   -----------------------
-
-   procedure Run_All_Systems is
-   begin
-
-      --  Clear backbuffer
-      Clear (Buffer_Bits'(Depth => True, Color => True, others => <>));
-
-      --  NOTE: The dependency ordering of these systems is manually set here
-      --  just by arranging these function calls. Maybe we could do something
-      --  cleverer.
-
-      Systems.Tick_Camera;
-      Systems.Tick_Position;
-      Systems.Tick_Rotation;
-      Systems.Tick_Object_Matrix;
-      Systems.Render;
-
-      --  Swap backbuffer to front
-      Glfw.Windows.Context.Swap_Buffers (Globals.Window.Ptr);
-
-   end Run_All_Systems;
 
 end Cargame.Engine.ECS;

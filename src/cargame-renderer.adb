@@ -2,9 +2,12 @@ with GL.Objects.Programs; use GL.Objects.Programs;
 with GL.Objects.Shaders;
 with GL.Objects.Vertex_Arrays;
 with GL.Objects.Buffers;
+with GL.Buffers;
 with GL.Files;
 with GL.Toggles;
 with GL.Window;
+
+with Glfw.Windows.Context;
 
 with Cargame.Config;
 with Cargame.Globals;
@@ -141,6 +144,23 @@ package body Cargame.Renderer is
    begin
       Projection_Matrix_Needs_Update := True;
    end Handle_Window_Resize;
+
+   -------------------------
+   --  Clear_Back_Buffer  --
+   -------------------------
+
+   procedure Clear_Back_Buffer is
+      use GL.Buffers;
+   begin
+      Clear (Buffer_Bits'(Depth  => True,
+                          Color  => True,
+                          others => <>));
+   end Clear_Back_Buffer;
+
+   procedure Swap_Buffers is
+   begin
+      Glfw.Windows.Context.Swap_Buffers (Globals.Window.Ptr);
+   end Swap_Buffers;
 
    -----------------------
    --  Internal_Render  --

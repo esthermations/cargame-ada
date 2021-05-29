@@ -4,7 +4,7 @@ with GL.Types;                       use GL.Types; use GL.Types.Singles;
 
 with Cargame.Types;                  use Cargame.Types;
 with Cargame.Engine.ECS;             use Cargame.Engine.ECS;
-with Cargame.Gameplay;
+with Cargame.Gameplay.Components;
 
 --  esthero:
 --
@@ -33,6 +33,12 @@ package Cargame.Renderer is
 
    procedure Handle_Window_Resize;
    --  Call this when the viewport has changed size.
+
+   procedure Clear_Back_Buffer;
+   --  Call this before each frame to clear the buffer before we draw into it.
+
+   procedure Swap_Buffers;
+   --  Call this to swap the backbuffer to the front after rendering is done.
 
    -------------
    --  Camera --
