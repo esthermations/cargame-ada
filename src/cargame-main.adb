@@ -105,16 +105,16 @@ begin
    Asteroid_Model := Create_Model_From_Obj (Config.Asteroid_Model_Path);
 
    Player := ECS.New_Entity;
-   Components.Controlled_By_Player.Set (Player, True);
-   Components.Position.Set             (Player, Origin);
-   Components.Velocity.Set             (Player, (others => 0.0));
-   Components.Acceleration.Set         (Player, (others => 0.0));
-   Components.Render_Scale.Set         (Player, 10.0);
-   Components.Object_Matrix.Set        (Player, Identity4);
-   Components.CamObj_Matrix.Set        (Player, Identity4);
-   Components.Normal_Matrix.Set        (Player, Identity3);
-   Components.Model.Set                (Player, Player_Model);
-   Components.Rotation.Set             (Player, Radians (0.0));
+   Components.Controlled_By_Player.Mgr.Update (Player, True);
+   Components.Position.Mgr.Update             (Player, Origin);
+   Components.Velocity.Mgr.Update             (Player, (others => 0.0));
+   Components.Acceleration.Mgr.Update         (Player, (others => 0.0));
+   Components.Render_Scale.Mgr.Update         (Player, 10.0);
+   Components.Object_Matrix.Mgr.Update        (Player, Identity4);
+   Components.CamObj_Matrix.Mgr.Update        (Player, Identity4);
+   Components.Normal_Matrix.Mgr.Update        (Player, Identity3);
+   Components.Model.Mgr.Update                (Player, Player_Model);
+   Components.Rotation.Mgr.Update             (Player, Radians (0.0));
 
    for I in Asteroids'Range loop
       Asteroids (I) := ECS.New_Entity;
@@ -128,17 +128,17 @@ begin
          Position (X) := Factor * Single (R.Random (Float_Generator) - 0.5);
          Position (Y) := Factor * Single (R.Random (Float_Generator) - 0.5);
          Position (Z) := Factor * Single (R.Random (Float_Generator) - 0.5);
-         Components.Position.Set (Asteroids (I), Position);
+         Components.Position.Mgr.Update (Asteroids (I), Position);
       end;
 
       --  Set everything else
-      Components.Rotation.Set         (Asteroids (I), Radians (0.0));
-      Components.Model.Set            (Asteroids (I), Asteroid_Model);
-      Components.Rotational_Speed.Set (Asteroids (I), Radians (0.01));
-      Components.Render_Scale.Set     (Asteroids (I), 10.0);
-      Components.Object_Matrix.Set    (Asteroids (I), Identity4);
-      Components.CamObj_Matrix.Set    (Asteroids (I), Identity4);
-      Components.Normal_Matrix.Set    (Asteroids (I), Identity3);
+      Components.Rotation.Mgr.Update         (Asteroids (I), Radians (0.0));
+      Components.Model.Mgr.Update            (Asteroids (I), Asteroid_Model);
+      Components.Rotational_Speed.Mgr.Update (Asteroids (I), Radians (0.01));
+      Components.Render_Scale.Mgr.Update     (Asteroids (I), 10.0);
+      Components.Object_Matrix.Mgr.Update    (Asteroids (I), Identity4);
+      Components.CamObj_Matrix.Mgr.Update    (Asteroids (I), Identity4);
+      Components.Normal_Matrix.Mgr.Update    (Asteroids (I), Identity3);
    end loop;
 
    -----------------------

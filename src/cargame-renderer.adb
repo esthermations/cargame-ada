@@ -167,25 +167,41 @@ package body Cargame.Renderer is
    -----------------------
 
    procedure Internal_Render (E : in Entity) is
-      use Cargame.Engine.Models;
-      use Cargame.Gameplay;
-      M   : constant Model         := Components.Model.Value (E);
-      Pos : constant Valid_Vector3 := Components.Position.Value (E);
-      Rot : constant Radians       := Components.Rotation.Value (E);
-      Scl : constant Single        := Components.Render_Scale.Value (E);
+      use Cargame.Gameplay.Components;
+      Mdl : Model.Option;
+      Pos : Position.Option;
+      Rot : Rotation.Option;
+      Scl : Render_Scale.Option;
 
-      Transform : constant Matrix4 :=
-         Translate (Rotate (Scale (Identity4, Scl), Rot), Pos);
+      Transform : Matrix4 := Identity4;
 
       use GL.Objects.Vertex_Arrays, GL.Objects.Buffers;
    begin
+
+      Model.Mgr.Read_Fresh        (E, Mdl);
+      Position.Mgr.Read_Fresh     (E, Pos);
+      Rotation.Mgr.Read_Fresh     (E, Rot);
+      Render_Scale.Mgr.Read_Fresh (E, Scl);
+
+      if not (Mdl.Is_Set and then
+              Pos.Is_Set and then
+              Rot.Is_Set and then
+              Scl.Is_Set)
+      then
+         return;
+      end if;
+
+      Scale     (Transform, Scl.Val);
+      Rotate    (Transform, Rot.Val);
+      Translate (Transform, Pos.Val);
+
       Uniforms.Model.Set_And_Send (Transform);
 
-      Bind (M.Vao);
-      Bind (Array_Buffer, M.Vertex_Buffer);
-      Bind (Array_Buffer, M.Normal_Buffer);
+      Bind (Mdl.Val.Vao);
+      Bind (Array_Buffer, Mdl.Val.Vertex_Buffer);
+      Bind (Array_Buffer, Mdl.Val.Normal_Buffer);
 
-      for Mtl of M.Materials loop
+      for Mtl of Mdl.Val.Materials loop
          Draw_Arrays (Mode  => Triangles,
                       First => Mtl.First_Index,
                       Count => Mtl.Num_Indices);

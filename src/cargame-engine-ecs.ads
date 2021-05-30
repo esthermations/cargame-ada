@@ -36,15 +36,44 @@ package Cargame.Engine.ECS is
    -----------------
 
    generic
-      type Data_Type is private;
+      type Element_T is private;
    package Component is
-      Value : array (Entity) of Data_Type; --  with Volatile_Components;
-      Has   : Entity_Set; --  FIXME: Backwards naming?
 
-      procedure Set (E : in Entity; V : in Data_Type)
-         with Post => Has (E) and then Value (E) = V;
+      type Option is
+         record
+            Is_Set : Boolean;
+            Val    : Element_T;
+         end record;
 
-      function Q return Entity_Set is (Has);
+      type Data_T is array (Entity) of Option;
+
+      task Mgr is
+         --  Stale state
+
+         entry Read_Stale (E : in Entity; Ret : out Option);
+         --  Read Stale component data, probably because you plan to use it to
+         --  calculate New_Data for calling Update on this component.
+
+         entry Update (E : in Entity; New_Value : in Element_T);
+         --  Update the data in this component.
+
+         entry Finished_Update;
+         --  Moves us out of the Stale state into the Fresh state.
+
+         --  Fresh state
+
+         entry Read_Fresh (E : in Entity; Ret : out Option);
+         --  Read updated data. Will block until Updated is flagged.
+
+         entry Next_Frame;
+         --  Indicate that all systems have finished running and we're moving
+         --  on to the next frame. Moves us into the Stale state.
+      end Mgr;
+
+   private
+
+      Data : Data_T;
+
    end Component;
 
    ---------------

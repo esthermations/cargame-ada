@@ -6,12 +6,10 @@ with Glfw.Input;
 with Glfw.Input.Keys;
 
 with Cargame.Types;
-with Cargame.Engine.Models;
 with Cargame.Engine.ECS;
 
 package Cargame.Gameplay is
 
-   use Cargame.Engine.Models;
    use Cargame.Types;
    use GL, GL.Types, GL.Types.Singles;
 
@@ -25,7 +23,6 @@ package Cargame.Gameplay is
 
    Num_Asteroids : constant := ECS.Max_Entities - 1;
    Asteroids     : ECS.Entity_Array (1 .. Num_Asteroids);
-
 
    ----------------
    --  Controls  --

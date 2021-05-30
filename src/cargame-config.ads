@@ -24,6 +24,12 @@ package Cargame.Config is
    Initial_Camera_Target   : constant Vector3 := (0.0, 0.0, 0.0);
    Up_Vector               : constant Vector3 := (0.0, 1.0, 0.0);
 
+   Camera_Position_Offset  : constant Vector3 := (0.0, 2.0, -2.0);
+   --  This is added to the player's position to give the camera's position.
+
+   Camera_Target_Offset    : constant Vector3 := (0.0, 0.0, +2.0);
+   --  This is added to the player's position to give the camera's target.
+
    Clear_Colour            : constant Color := (0.1, 0.4, 0.4, 1.0);
    Vertical_FoV            : constant       := 60.0;
    Near_Plane              : constant       := 1.0;

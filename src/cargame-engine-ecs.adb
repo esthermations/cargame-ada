@@ -45,11 +45,45 @@ package body Cargame.Engine.ECS is
 
    package body Component is
 
-      procedure Set (E : in Entity; V : in Data_Type) is
+      task body Mgr is
       begin
-         Has   (E) := True;
-         Value (E) := V;
-      end Set;
+         Task_Loop :
+         loop
+
+            Stale_State :
+            loop
+               select
+                  accept Read_Stale (E : in Entity; Ret : out Option) do
+                     Ret := Data (E);
+                  end Read_Stale;
+               or
+                  accept Update (E : in Entity; New_Value : in Element_T) do
+                     Data (E) := Option'(Is_Set => True, Val => New_Value);
+                  end Update;
+               or
+                  accept Finished_Update;
+                  exit Stale_State;
+               or
+                  terminate;
+               end select;
+            end loop Stale_State;
+
+            Fresh_State :
+            loop
+               select
+                  accept Read_Fresh (E : in Entity; Ret : out Option) do
+                     Ret := Data (E);
+                  end Read_Fresh;
+               or
+                  accept Next_Frame;
+                  exit Fresh_State;
+               or
+                  terminate;
+               end select;
+            end loop Fresh_State;
+
+         end loop Task_Loop;
+      end Mgr;
 
    end Component;
 
@@ -58,6 +92,7 @@ package body Cargame.Engine.ECS is
    ---------------
 
    package body Systems is
+
       type Array_Of_System
          is array (Positive range 1 .. Config.Max_Systems)
          of System;

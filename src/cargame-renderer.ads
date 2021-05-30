@@ -21,11 +21,7 @@ package Cargame.Renderer is
    procedure Enqueue_For_Rendering (E : in Entity)
    --  Call this if you'd like to render the given entity with the next call to
    --  Render_Enqueued_Entities.
-      with Pre => Initialised and
-                  Gameplay.Components.Model.Has (E) and
-                  Gameplay.Components.Rotation.Has (E) and
-                  Gameplay.Components.Position.Has (E) and
-                  Gameplay.Components.Render_Scale.Has (E);
+      with Pre => Initialised;
 
    procedure Render_Enqueued_Entities;
    --  Call this to issue drawcalls for all enqueued entities. Clears the queue

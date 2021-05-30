@@ -1,5 +1,8 @@
+with Cargame.Engine.Models;
+
 package Cargame.Gameplay.Components is
    subtype Cargame_Model is Cargame.Engine.Models.Model;
+
    package Controlled_By_Player is new ECS.Component (Boolean);
    package Position             is new ECS.Component (Types.Valid_Vector3);
    package Velocity             is new ECS.Component (Types.Valid_Vector3);
