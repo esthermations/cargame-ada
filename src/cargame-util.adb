@@ -43,7 +43,7 @@ package body Cargame.Util is
       Context.Split (Sep => ".", Into => Split_Context, Last => Split_Last);
 
       if Split_Last > 1 then
-         Module := Split_Context (2);
+         Module := Split_Context (Split_Last); -- Split_Context (2);
       end if;
 
       --  Dynamically assign a colour :)
@@ -141,4 +141,5 @@ package body Cargame.Util is
          return Ret & " minutes";
       end if;
    end Time_Span_Image;
+
 end Cargame.Util;

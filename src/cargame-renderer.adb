@@ -1,3 +1,5 @@
+with Ada.Containers; use Ada.Containers;
+
 with GL.Objects.Programs; use GL.Objects.Programs;
 with GL.Objects.Shaders;
 with GL.Objects.Vertex_Arrays;
@@ -201,11 +203,21 @@ package body Cargame.Renderer is
       Bind (Array_Buffer, Mdl.Val.Vertex_Buffer);
       Bind (Array_Buffer, Mdl.Val.Normal_Buffer);
 
-      for Mtl of Mdl.Val.Materials loop
-         Draw_Arrays (Mode  => Triangles,
-                      First => Mtl.First_Index,
-                      Count => Mtl.Num_Indices);
-      end loop;
+      if Mdl.Val.Materials.Length > 0 then
+         for Mtl of Mdl.Val.Materials loop
+            Draw_Arrays (
+               Mode  => Triangles,
+               First => Mtl.First_Index,
+               Count => Mtl.Num_Indices
+            );
+         end loop;
+      else -- No materials
+         Draw_Arrays (
+            Mode  => Triangles,
+            First => 0,
+            Count => Mdl.Val.Num_Vertices
+         );
+      end if;
    end Internal_Render;
 
    -------------------------------------

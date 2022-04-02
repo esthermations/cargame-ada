@@ -18,7 +18,7 @@ package body Cargame.Engine.Obj_Parser is
 
    function Get_Face (Split_Line : in XString_Array)
       return Face
-      with Pre     => Split_Line (1) = "f",
+      with Pre     => Split_Line'Length >= 1 and then Split_Line (1) = "f",
            Post    => Get_Face'Result'Length = (Split_Line'Length - 1),
            Global  => null,
            Depends => (Get_Face'Result => Split_Line);
@@ -32,7 +32,8 @@ package body Cargame.Engine.Obj_Parser is
 
    function Parse_Mtl (Mtl_File_Path : in String)
       return Vector_Of_Material
-      with Post => Parse_Mtl'Result.Length /= 0;
+      with Pre  => Exists (Mtl_File_Path) and then
+                   Kind   (Mtl_File_Path) = Ordinary_File;
 
    -------------------
    --  Definitions  --
@@ -67,13 +68,15 @@ package body Cargame.Engine.Obj_Parser is
          end loop;
 
          Line_Is_Significant :=
-            Line.Length > 0 and
-            Line (1) /= '#' and
+            Line.Length > 0 and then
+            Line (1) /= '#' and then
             not (for all C of Line => Is_Space (C) or Is_Control (C));
 
          if Line_Is_Significant then
             return;
          end if;
+
+         Util.Log ("Skipping line: [" & To_String (Line) & "]");
 
       end loop;
 
@@ -112,9 +115,11 @@ package body Cargame.Engine.Obj_Parser is
    begin
       Set_Directory (Containing_Directory (File_Path));
 
-      Open (File => Obj_File,
-            Mode => In_File,
-            Name => Simple_Name (File_Path));
+      Open (
+         File => Obj_File,
+         Mode => In_File,
+         Name => Simple_Name (File_Path)
+      );
 
       Loop_Over_Obj_Lines :
       loop
@@ -123,18 +128,22 @@ package body Cargame.Engine.Obj_Parser is
 
          exit Loop_Over_Obj_Lines when End_Of_File (Obj_File);
 
-         Line.Split (Sep => " ",
-                     Omit_Empty => True,
-                     Into => Split_Line,
-                     Last => Split_Last);
+         Line.Split (
+            Sep        => " ",
+            Omit_Empty => True,
+            Into       => Split_Line,
+            Last       => Split_Last
+         );
 
          pragma Assert (Split_Line'Length >= 1);
 
+         Util.Log (To_String (Split_Line (1)));
+
          case Obj_Token'Value (To_String (Split_Line (1))) is
-            when VN => Unique_Normals.Append (Get_Vector3 (Split_Line));
-            when VT => Unique_TexCrds.Append (Get_Vector2 (Split_Line));
-            when V => Unique_Vertices.Append (Get_Vector3 (Split_Line));
-            when F =>
+            when VN => Unique_Normals.Append (Read_Vector3 (Split_Line (1 .. Split_Last)));
+            when VT => Unique_TexCrds.Append (Read_Vector2 (Split_Line (1 .. Split_Last)));
+            when V  => Unique_Vertices.Append (Read_Vector3 (Split_Line (1 .. Split_Last)));
+            when F  =>
                declare
                   UV : Vector_Of_Vector3 renames Unique_Vertices;
                   UN : Vector_Of_Vector3 renames Unique_Normals;
@@ -157,10 +166,12 @@ package body Cargame.Engine.Obj_Parser is
                begin
 
                   if Ret.Has_TexCrds and not TexCrd_Is_Used then
-                     Ret := (Has_TexCrds => False,
-                             Vertices    => <>,
-                             Normals     => <>,
-                             Materials   => <>);
+                     Ret := (
+                        Has_TexCrds => False,
+                        Vertices    => <>,
+                        Normals     => <>,
+                        Materials   => <>
+                     );
                   end if;
 
                   for FC of F loop
@@ -235,26 +246,31 @@ package body Cargame.Engine.Obj_Parser is
 
       Set_Directory (Original_Directory);
 
-      --  We set Num_Indices when we encounter the next material, so that won't
-      --  happen for the last material. Do that here.
-      pragma Assert
-         ((for some M of Ret.Materials => M.Num_Indices = Unset_Num_Indices),
-           "The last material has Num_Indices set. That's strange.");
+      if Ret.Materials.Length > 0 then
+         --  We set Num_Indices when we encounter the next material, so that
+         --  won't happen for the last material. Do that here.
+         pragma Assert (
+            (for some M of Ret.Materials => M.Num_Indices = Unset_Num_Indices),
+            "The last material has Num_Indices set. That's strange."
+         );
 
-      for M of Ret.Materials loop
-         if M.Num_Indices = Unset_Num_Indices then
-            M.Num_Indices := (Ret.Vertices.Last_Index - M.First_Index);
-            Util.Log ("Set Num_Indices for last material to "
-                         & Int'Image (M.Num_Indices));
-         end if;
-      end loop;
+         for M of Ret.Materials loop
+            if M.Num_Indices = Unset_Num_Indices then
+               M.Num_Indices := (Ret.Vertices.Last_Index - M.First_Index);
+               Util.Log ("Set Num_Indices for last material to " & M.Num_Indices'Img);
+            end if;
+         end loop;
+      end if;
 
       return Ret;
+
    exception
+
       when E : others =>
          Util.Log_Error ("Failed to parse obj file: " & File_Path);
          Util.Log_Warning (Ada.Exceptions.Exception_Message (E));
          raise;
+
    end Parse;
 
    ---------------------------------------------------------------------------

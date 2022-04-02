@@ -25,6 +25,7 @@ package Cargame.Engine.Models is
       Vao           : Vertex_Array_Object := Null_Array_Object;
       Vertex_Buffer : GL.Objects.Buffers.Buffer;
       Normal_Buffer : GL.Objects.Buffers.Buffer;
+      Num_Vertices  : GL.Types.Size;
    end record;
 
    overriding

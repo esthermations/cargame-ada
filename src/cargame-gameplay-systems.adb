@@ -63,17 +63,13 @@ package body Cargame.Gameplay.Systems is
    end Tick_Rotation;
 
    procedure Tick_Object_Matrix is
-      Old_Mtx : Object_Matrix.Option;
       Scl     : Render_Scale.Option;
       Rot     : Rotation.Option;
       Pos     : Position.Option;
 
       function Should_Update
          return Boolean
-         is (Old_Mtx.Is_Set and then
-             Scl.Is_Set     and then
-             Rot.Is_Set     and then
-             Pos.Is_Set);
+         is (Scl.Is_Set and then Rot.Is_Set and then Pos.Is_Set);
    begin
       for E in Entity loop
          Render_Scale.Mgr.Read_Fresh (E, Scl);
