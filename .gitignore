@@ -4,4 +4,8 @@ src/models
 .vscode
 *.cgpr
 env.sh
-alire/*
+alire/*.DS_Store
+*/.DS_Store
+cargame
+alire
+.DS_Store
