@@ -23,9 +23,8 @@ package Cargame.Engine.Models is
    type Model is tagged record
       Vao           : Vertex_Array_Object := Null_Array_Object;
       Vertex_Buffer : GL.Objects.Buffers.Buffer;
-      Is_Indexed    : Boolean := False;
-      Indices       : Vector_Of_Size;
-      Materials     : Vector_Of_Material;
+      Normal_Buffer : GL.Objects.Buffers.Buffer;
+      Num_Vertices  : GL.Types.Size;
    end record;
 
    overriding

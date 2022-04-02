@@ -20,7 +20,7 @@ package body Cargame.Engine.Models is
       Has_Materials : constant Boolean := (M.Materials.Length /= 0);
    begin
       pragma Assert (Has_Valid_VAO);
-      pragma Assert (Has_Materials);
+      pragma Assert (Has_Materials or else M.Num_Vertices > 0);
       return True;
    end Is_Renderable;
 
@@ -169,42 +169,17 @@ package body Cargame.Engine.Models is
                        Data   => Indices,
                        Usage  => Static_Draw);
 
-      ---------------------------------------
-      -- Add default material if necessary --
-      ---------------------------------------
-
-      if Out_Materials.Length = 0 then
-         Put_Line ("Appending default materials.");
-         pragma Assert
-            (Default_Material.Diffuse_Texture.Raw_Id /= 0 and then
-                Default_Material.Specular_Texture.Raw_Id /= 0,
-             "Default material is uninitialised.");
-         declare
-            Mtl : Material := Default_Material;
-         begin
-            pragma Assert
-               ((for all I in Indices'First .. Indices'Last
-                    => Indices (I) = I),
-                "Using default material for non-sequential indices"
-                   & " is untested.");
-            Mtl.First_Index := Indices'First;
-            --  FIXME: There has to be a neater way to get the number of
-            --  possible values in a range.
-            Mtl.Num_Indices := Indices'Last - Mtl.First_Index;
-            Out_Materials.Append (Mtl);
-         end;
-      else
-         Util.Log ("NOT appending default material.");
-      end if;
-
       ------------
       -- Return --
       ------------
 
-      return Model'(Vao           => Vao,
-                    Vertex_Buffer => Vertex_Buf,
-                    Normal_Buffer => Normal_Buf,
-                    Materials     => Out_Materials);
+      return Model'(
+         Vao           => Vao,
+         Vertex_Buffer => Vertex_Buf,
+         Normal_Buffer => Normal_Buf,
+         Materials     => Out_Materials,
+         Num_Vertices  => Indices'Last - Indices'First
+      );
    end Create_Model;
 
    ----------------------------------------------------------------------------

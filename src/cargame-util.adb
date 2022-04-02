@@ -1,6 +1,7 @@
 with Ada.Text_IO;
 with GNATCOLL.Strings;
 with Cargame.Globals;
+with Cargame.Config;
 
 package body Cargame.Util is
 
@@ -23,7 +24,9 @@ package body Cargame.Util is
    ----------------------------------------------------------------------------
 
    function Coloured (S : in String; Colour : in Text_Colour) return String is
-      (ANSI_Colour_Prefix (Colour) & S & ANSI_Reset_Colours);
+      (if Cargame.Config.Use_Ansi_Colours_In_Logs
+       then ANSI_Colour_Prefix (Colour) & S & ANSI_Reset_Colours
+       else S);
 
    ----------------------------------------------------------------------------
    function Abbreviate_Context (Ctx : in String) return String is
@@ -40,7 +43,7 @@ package body Cargame.Util is
       Context.Split (Sep => ".", Into => Split_Context, Last => Split_Last);
 
       if Split_Last > 1 then
-         Module := Split_Context (2);
+         Module := Split_Context (Split_Last); -- Split_Context (2);
       end if;
 
       --  Dynamically assign a colour :)
@@ -138,4 +141,5 @@ package body Cargame.Util is
          return Ret & " minutes";
       end if;
    end Time_Span_Image;
+
 end Cargame.Util;

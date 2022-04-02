@@ -32,31 +32,35 @@ private
    --  Helper functions
 
    ---------------------------------------------------------------------------
-   function Get_Single (Str : in XString) return Single
+   function Read_Single (Str : in XString)
+      return Single
       is (Single'Value (Str.To_String))
       with Pre     => Length (Str) /= 0,
-           Depends => (Get_Single'Result => Str);
+           Depends => (Read_Single'Result => Str);
 
    ---------------------------------------------------------------------------
-   function Get_Vector2 (Split_Line : in XString_Array) return Valid_Vector2
-      is (Vector2'(X => Get_Single (Split_Line (2)),
-                   Y => Get_Single (Split_Line (3))))
+   function Read_Vector2 (Split_Line : in XString_Array)
+      return Valid_Vector2
+      is (Vector2'(X => Read_Single (Split_Line (2)),
+                   Y => Read_Single (Split_Line (3))))
       with Pre => (Split_Line'Length >= 3 and then
                    Split_Line (1).To_String in "vt");
                     --  "vt" -> texcoord. Technically that makes this
-                    --  function "Get_TexCrd" but y'know.
+                    --  function "Read_TexCrd" but y'know.
 
    ---------------------------------------------------------------------------
-   function Get_Vector3 (Split_Line : in XString_Array) return Valid_Vector3
-      is (Vector3'(X => Get_Single (Split_Line (2)),
-                   Y => Get_Single (Split_Line (3)),
-                   Z => Get_Single (Split_Line (4))))
-      with Pre => (Split_Line'Length >= 4 and then
+   function Read_Vector3 (Split_Line : in XString_Array)
+      return Valid_Vector3
+      is (Vector3'(X => Read_Single (Split_Line (2)),
+                   Y => Read_Single (Split_Line (3)),
+                   Z => Read_Single (Split_Line (4))))
+      with Pre => (Split_Line'Length = 4 and then
                    To_String (Split_Line (1)) in
                       "v" | "vn" | "Ks" | "Kd" | "Ka");
 
    ---------------------------------------------------------------------------
    procedure Next_Significant_Line (File : in File_Type; Line : out XString)
-      with Post => (if Line.Length = 0 then End_Of_File (File));
+      with Pre  => Is_Open (File),
+           Post => (if Line.Length = 0 then End_Of_File (File));
 
 end Cargame.Engine.Obj_Parser;

@@ -19,20 +19,22 @@ project Cargame is
 
    for Library_Options use ("-Lobj", "-shared");
 
-   package Builder is
-      for Executable ("cargame-main.adb") use "cargame";
-   end Builder;
+  package Builder is
+    for Executable ("cargame-main.adb") use "cargame";
+  end Builder;
 
-   package Compiler is
-      for Default_Switches ("ada") use
-         ("-gnatwa",   --  All warnings
-          "-gnatVa",   --  All validity checks
-          --  Style checks, see https://gcc.gnu.org/onlinedocs/gnat_ugn/Style-Checking.html
-          "-gnaty3aAbcdefhiklmprsStux",
-          "-gnatm80",  --  Limit lines to 80 columns
-          "-gnatyO",   --  Overriding subprograms must be marked as such
-          "-gnata",    --  Enable assertions and contract checks
-          "-gnat2020"  --  Ada 2020
-         );
-   end Compiler;
+  package Compiler is
+    for Default_Switches ("c") use ("-O2", "-s", "-Wp,-w");
+    for Default_Switches ("ada") use
+      ("-gnatwa",   --  All warnings
+       "-gnatVa",   --  All validity checks
+       --  Style checks, see https://gcc.gnu.org/onlinedocs/gnat_ugn/Style-Checking.html
+       "-gnaty3aAbcdefhiklprsStux",
+       "-gnatm80",  --  Limit lines to 80 columns
+       "-gnatyO",   --  Overriding subprograms must be marked as such
+       "-gnata",    --  Enable assertions and contract checks
+       "-gnat2022", --  Ada 2020
+       "-g" -- Enable debugging
+      );
+  end Compiler;
 end Cargame;

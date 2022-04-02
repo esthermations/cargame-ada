@@ -6,11 +6,13 @@ with GL.Types.Colors; use GL.Types.Colors;
 
 package Cargame.Config is
 
+   Use_Ansi_Colours_In_Logs : constant Boolean := False;
+
    Vertex_Shader_Path   : constant String := "./src/shaders/vert.glsl";
    Fragment_Shader_Path : constant String := "./src/shaders/frag.glsl";
 
-   Player_Model_Path    : constant String := "./src/models/teapot.obj";
-   Asteroid_Model_Path  : constant String := Player_Model_Path;
+   Player_Model_Path    : constant String := "./src/models/Player.obj";
+   Asteroid_Model_Path  : constant String := "./src/models/Player.obj";
 
    Max_Entities : constant := 100;
    --  Maximum number of entities we can spawn in the game. Storage for these
