@@ -22,30 +22,9 @@ package Cargame.Engine.Obj_Parser is
    Invalid_Obj_Data : exception;
    Invalid_Mtl_File : exception;
 
-   ---------------------------------------------------------------------------
-   --  Obj_Data
-
-   type Obj_Data (Has_TexCrds : Boolean := True) is record
-      Materials : Vector_Of_Material;
-
-      Vertices  : Vector_Of_Vector3;
-      Normals   : Vector_Of_Vector3;
-
-      case Has_TexCrds is
-         when True   => TexCrds : Vector_Of_Vector2;
-         when others => null;
-      end case;
-   end record;
-
-   ---------------------------------------------------------------------------
-   function Is_Valid (Data : in Obj_Data) return Boolean;
-   --  This runs the obj data through a series of sanity checks. Returns false
-   --  and logs details if it finds any issues, else true.
-
-   ---------------------------------------------------------------------------
-   function Parse (File_Path : in String) return Obj_Data
+   function Parse (File_Path : in String) return Vertex_Data
        with Pre  => Renderer.Initialised,
-            Post => Is_Valid (Parse'Result);
+            Post => Is_Sane (Parse'Result);
 
 private
 
@@ -72,7 +51,7 @@ private
       is (Vector3'(X => Get_Single (Split_Line (2)),
                    Y => Get_Single (Split_Line (3)),
                    Z => Get_Single (Split_Line (4))))
-      with Pre => (Split_Line'Length = 4 and then
+      with Pre => (Split_Line'Length >= 4 and then
                    To_String (Split_Line (1)) in
                       "v" | "vn" | "Ks" | "Kd" | "Ka");
 

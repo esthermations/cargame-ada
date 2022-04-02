@@ -1,38 +1,38 @@
 -- begin auto-gpr-with --
 --  This section was automatically added by Alire
+with "gid.gpr";
 with "opengl-glfw.gpr";
+with "opengl-images.gpr";
 with "opengl.gpr";
 -- end auto-gpr-with --
 with "gnatcoll";
 
 project Cargame is
 
-  for Languages   use ("ada", "c");
-  for Source_Dirs use ("src");
-  for Object_Dir  use "obj";
-  for Exec_Dir    use ".";
-  for Main        use ("cargame-main.adb");
+   for Languages   use ("ada");
+   for Source_Dirs use ("src");
+   for Object_Dir  use "obj";
+   for Exec_Dir    use ".";
+   for Main        use ("cargame-main.adb");
 
-  for Create_Missing_Dirs use "True";
+   for Create_Missing_Dirs use "True";
 
-  for Library_Options use ("-Lobj", "-shared");
+   for Library_Options use ("-Lobj", "-shared");
 
-  package Builder is
-    for Executable ("cargame-main.adb") use "cargame";
-  end Builder;
+   package Builder is
+      for Executable ("cargame-main.adb") use "cargame";
+   end Builder;
 
-  package Compiler is
-    for Default_Switches ("c") use ("-O2", "-s", "-Wp,-w");
-    for Default_Switches ("ada") use
-      ("-gnatwa",   --  All warnings
-       "-gnatVa",   --  All validity checks
-       --  Style checks, see https://gcc.gnu.org/onlinedocs/gnat_ugn/Style-Checking.html
-       "-gnaty3aAbcdefhiklmprsStux",
-       "-gnatm80",  --  Limit lines to 80 columns
-       "-gnatyO",   --  Overriding subprograms must be marked as such
-       "-gnata",    --  Enable assertions and contract checks
-       "-gnat2020"  --  Ada 2020
-      );
-  end Compiler;
-
+   package Compiler is
+      for Default_Switches ("ada") use
+         ("-gnatwa",   --  All warnings
+          "-gnatVa",   --  All validity checks
+          --  Style checks, see https://gcc.gnu.org/onlinedocs/gnat_ugn/Style-Checking.html
+          "-gnaty3aAbcdefhiklmprsStux",
+          "-gnatm80",  --  Limit lines to 80 columns
+          "-gnatyO",   --  Overriding subprograms must be marked as such
+          "-gnata",    --  Enable assertions and contract checks
+          "-gnat2020"  --  Ada 2020
+         );
+   end Compiler;
 end Cargame;

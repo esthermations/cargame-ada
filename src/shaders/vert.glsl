@@ -1,4 +1,4 @@
-#version 450
+#version 330
 
 uniform mat4 Model;
 uniform mat4 View;
@@ -7,9 +7,9 @@ uniform mat4 Projection;
 layout (location = 0) in  vec3 in_Position;
 layout (location = 1) in  vec3 in_Normal;
 
-layout (location = 0) out vec3 out_Colour;
+out vec4 Colour;
 
 void main() {
-    out_Colour = abs(in_Normal);
+    Colour = vec4(abs(in_Normal), 0.5);
     gl_Position = Projection * View * Model * vec4(in_Position, 1.0);
 }

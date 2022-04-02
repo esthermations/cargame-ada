@@ -21,10 +21,11 @@ package Cargame.Engine.Models is
    TexCrds_Attribute  : constant Attribute := 2;
 
    type Model is tagged record
-      Materials     : Vector_Of_Material;
       Vao           : Vertex_Array_Object := Null_Array_Object;
       Vertex_Buffer : GL.Objects.Buffers.Buffer;
-      Normal_Buffer : GL.Objects.Buffers.Buffer;
+      Is_Indexed    : Boolean := False;
+      Indices       : Vector_Of_Size;
+      Materials     : Vector_Of_Material;
    end record;
 
    overriding

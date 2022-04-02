@@ -9,8 +9,8 @@ package Cargame.Config is
    Vertex_Shader_Path   : constant String := "./src/shaders/vert.glsl";
    Fragment_Shader_Path : constant String := "./src/shaders/frag.glsl";
 
-   Player_Model_Path    : constant String := "./src/models/Barrel02.obj";
-   Asteroid_Model_Path  : constant String := "./src/models/Barrel02.obj";
+   Player_Model_Path    : constant String := "./src/models/teapot.obj";
+   Asteroid_Model_Path  : constant String := Player_Model_Path;
 
    Max_Entities : constant := 100;
    --  Maximum number of entities we can spawn in the game. Storage for these
