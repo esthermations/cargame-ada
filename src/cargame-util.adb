@@ -142,4 +142,21 @@ package body Cargame.Util is
       end if;
    end Time_Span_Image;
 
+
+   -----------------
+   --  Semaphore  --
+   -----------------
+
+   protected body Semaphore is
+      entry Wait when Signalled is
+      begin
+         Signalled := False;
+      end Wait;
+
+      entry Signal when not Signalled is
+      begin
+         Signalled := True;
+      end Signal;
+   end Semaphore;
+
 end Cargame.Util;

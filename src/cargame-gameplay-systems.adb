@@ -19,99 +19,93 @@ package body Cargame.Gameplay.Systems is
    use Cargame.Gameplay.Components;
 
    procedure Tick_Camera is
-      Pos : Position.Option;
+      Pos             : Position.Data_T;
+      Player_Position : Position.Datum_T;
    begin
-      Position.Mgr.Read_Fresh (Cargame.Gameplay.Player, Pos);
-      Renderer.Camera.Set_Position (Pos.Val + Config.Camera_Position_Offset);
-      Renderer.Camera.Set_Target   (Pos.Val + Config.Camera_Target_Offset);
+      Position.Mgr.Read_Fresh (Pos);
+
+      Player_Position := Pos (Gameplay.Player);
+      pragma Assert (Player_Position.Is_Set);
+
+      Renderer.Camera.Set_Position (Player_Position.Val + Config.Camera_Position_Offset);
+      Renderer.Camera.Set_Target   (Player_Position.Val + Config.Camera_Target_Offset);
    end Tick_Camera;
 
    procedure Tick_Position is
-      Old_Pos : Position.Option;
-      Vel     : Velocity.Option;
-
-      function Should_Update
-         return Boolean
-         is (Old_Pos.Is_Set and then Vel.Is_Set);
+      Pos : Position.Data_T;
+      Vel : Velocity.Data_T;
    begin
+      Position.Mgr.Read_Stale (E, Pos);
+      Velocity.Mgr.Read_Fresh (E, Vel);
+
       for E in Entity loop
-         Position.Mgr.Read_Stale (E, Old_Pos);
-         Velocity.Mgr.Read_Fresh (E, Vel);
-         if Should_Update then
-            Position.Mgr.Update (E, Old_Pos.Val + Vel.Val);
+         if Pos (E).Is_Set and Vel (E).Is_Set then
+            Pos (E).Val := @ + Vel (E).Val;
          end if;
       end loop;
-      Position.Mgr.Finished_Update;
+
+      Position.Mgr.Write_Fresh (Pos);
    end Tick_Position;
 
    procedure Tick_Rotation is
-      Old_Rot : Rotation.Option;
-      Rot_Spd : Rotational_Speed.Option;
-
-      function Should_Update
-         return Boolean
-         is (Old_Rot.Is_Set and Rot_Spd.Is_Set);
+      Rot : Rotation.Data_T;
+      Spd : Rotational_Speed.Data_T;
    begin
+      Rotation.Mgr.Read_Stale         (Rot);
+      Rotational_Speed.Mgr.Read_Fresh (Spd);
+
       for E in Entity loop
-         Rotation.Mgr.Read_Stale         (E, Old_Rot);
-         Rotational_Speed.Mgr.Read_Fresh (E, Rot_Spd);
-         if Should_Update then
-            Rotation.Mgr.Update (E, Old_Rot.Val + Rot_Spd.Val);
+         if Rot (E).Is_Set and Spd (E).Is_Set then
+            Rot (E).Val := @ + Spd (E).Val;
          end if;
       end loop;
-      Rotation.Mgr.Finished_Update;
+
+      Rotation.Mgr.Write_Fresh (Rot);
    end Tick_Rotation;
 
-   procedure Tick_Object_Matrix is
-      Scl     : Render_Scale.Option;
-      Rot     : Rotation.Option;
-      Pos     : Position.Option;
 
-      function Should_Update
-         return Boolean
-         is (Scl.Is_Set and then Rot.Is_Set and then Pos.Is_Set);
+   procedure Tick_Velocity is
+      Vel : Velocity.Data_T;
+      Acc : Acceleration.Data_T;
    begin
-      for E in Entity loop
-         Render_Scale.Mgr.Read_Fresh (E, Scl);
-         Rotation.Mgr.Read_Fresh (E, Rot);
-         Position.Mgr.Read_Fresh (E, Pos);
+      Velocity.Mgr.Read_Stale (Old);
+      Acceleration.Mgr.Read_Fresh (Acc);
 
-         if Should_Update then
+      for E in Vel'Range loop
+         if Vel (E).Is_Set and then Acc (E).Is_Set then
+            Vel (E).Val := @ + Acc (E).Val;
+         end if;
+      end loop;
+
+      Velocity.Mgr.Write_Fresh (Vel);
+   end Tick_Velocity;
+
+
+   procedure Tick_Object_Matrix is
+      Scl : Render_Scale.Data_T;
+      Rot : Rotation.Data_T;
+      Pos : Position.Data_T;
+      Obj : Object_Matrix.Data_T;
+   begin
+      Render_Scale.Mgr.Read_Fresh (Scl);
+      Rotation.Mgr.Read_Fresh     (Rot);
+      Position.Mgr.Read_Fresh     (Pos);
+
+      for E in Entity loop
+         if Scl (E).Is_Set and Rot (E).Is_Set and Pos (E).Is_Set then
             declare
                Mtx : Matrix4 := Identity4;
             begin
                Scale     (Mtx, Scl.Val);
                Rotate    (Mtx, Rot.Val);
                Translate (Mtx, Pos.Val);
-               Object_Matrix.Mgr.Update (E, Mtx);
+               Obj (E) := (Val => Mtx, Is_Set => True);
             end;
          end if;
       end loop;
-      Object_Matrix.Mgr.Finished_Update;
+
+      Object_Matrix.Mgr.Discard_Stale_Data;
+      Object_Matrix.Mgr.Write_Fresh (Obj);
    end Tick_Object_Matrix;
-
-   procedure Render is
-      Mdl : Model.Option;
-      Rot : Rotation.Option;
-      Pos : Position.Option;
-      Scl : Render_Scale.Option;
-
-      function Should_Render
-         return Boolean
-         is (Mdl.Is_Set and then
-             Rot.Is_Set and then
-             Pos.Is_Set and then
-             Scl.Is_Set);
-   begin
-      for E in Entity loop
-         Model.Mgr.Read_Fresh (E, Mdl);
-         Rotation.Mgr.Read_Fresh (E, Rot);
-         Position.Mgr.Read_Fresh (E, Pos);
-         Render_Scale.Mgr.Read_Fresh (E, Scl);
-         if Should_Render then
-            Cargame.Renderer.Enqueue_For_Rendering (E);
-         end if;
-      end loop;
-   end Render;
 
 end Cargame.Gameplay.Systems;

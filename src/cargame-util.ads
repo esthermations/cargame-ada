@@ -46,4 +46,16 @@ package Cargame.Util is
       (Where   : in String := GNAT.Source_Info.Source_Location;
        Context : in String := GNAT.Source_Info.Enclosing_Entity);
 
+
+   -----------------
+   --  Semaphore  --
+   -----------------
+
+   protected type Semaphore is
+      entry Wait;
+      entry Signal;
+   private
+      Signalled : Boolean := False;
+   end Semaphore;
+
 end Cargame.Util;

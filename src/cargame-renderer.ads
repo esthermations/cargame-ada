@@ -5,6 +5,7 @@ with GL.Types;                       use GL.Types; use GL.Types.Singles;
 with Cargame.Types;                  use Cargame.Types;
 with Cargame.Engine.ECS;             use Cargame.Engine.ECS;
 with Cargame.Gameplay.Components;
+with Cargame.Util;
 
 --  esthero:
 --
@@ -46,5 +47,9 @@ package Cargame.Renderer is
       function  Get_Position return Valid_Vector3;
       function  Get_Target   return Valid_Vector3;
    end Camera;
+
+   package State is
+      Ready_To_Render : Cargame.Util.Semaphore;
+   end State;
 
 end Cargame.Renderer;

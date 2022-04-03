@@ -100,44 +100,6 @@ package body Cargame.Renderer is
 
    end Init;
 
-   -----------------------------
-   --  Enqueue_For_Rendering  --
-   -----------------------------
-
-   procedure Enqueue_For_Rendering (E : in Entity) is
-   begin
-      Render_Queue (E) := True;
-   end Enqueue_For_Rendering;
-
-   procedure Render_Enqueued_Entities is
-   begin
-      --  Update View, if needed
-      if View_Matrix_Needs_Update then
-         Uniforms.View.Set_And_Send
-            (Look_At (Camera_Pos => Camera.Get_Position,
-                      Target_Pos => Camera.Get_Target,
-                      Up         => Cargame.Config.Up_Vector));
-      end if;
-
-      --  Update Projection, if needed
-      if Projection_Matrix_Needs_Update then
-         Cargame.Renderer.Uniforms.Projection.Set_And_Send
-            (Internal_Calculate_Projection);
-         GL.Window.Set_Viewport
-            (0, 0, Int (Globals.Window.Width), Int (Globals.Window.Height));
-      end if;
-
-      --  Render each entity
-      for E in Entity loop
-         if Render_Queue (E) then
-            Internal_Render (E);
-         end if;
-      end loop;
-
-      --  Clear queue
-      Render_Queue := (others => False);
-   end Render_Enqueued_Entities;
-
    ----------------------------
    --  Handle_Window_Resize  --
    ----------------------------
@@ -154,71 +116,19 @@ package body Cargame.Renderer is
    procedure Clear_Back_Buffer is
       use GL.Buffers;
    begin
-      Clear (Buffer_Bits'(Depth  => True,
-                          Color  => True,
-                          others => <>));
+      Clear (
+         Buffer_Bits'(
+            Depth  => True,
+            Color  => True,
+            others => <>
+         )
+      );
    end Clear_Back_Buffer;
 
    procedure Swap_Buffers is
    begin
       Glfw.Windows.Context.Swap_Buffers (Globals.Window.Ptr);
    end Swap_Buffers;
-
-   -----------------------
-   --  Internal_Render  --
-   -----------------------
-
-   procedure Internal_Render (E : in Entity) is
-      use Cargame.Gameplay.Components;
-      Mdl : Model.Option;
-      Pos : Position.Option;
-      Rot : Rotation.Option;
-      Scl : Render_Scale.Option;
-
-      Transform : Matrix4 := Identity4;
-
-      use GL.Objects.Vertex_Arrays, GL.Objects.Buffers;
-   begin
-
-      Model.Mgr.Read_Fresh        (E, Mdl);
-      Position.Mgr.Read_Fresh     (E, Pos);
-      Rotation.Mgr.Read_Fresh     (E, Rot);
-      Render_Scale.Mgr.Read_Fresh (E, Scl);
-
-      if not (Mdl.Is_Set and then
-              Pos.Is_Set and then
-              Rot.Is_Set and then
-              Scl.Is_Set)
-      then
-         return;
-      end if;
-
-      Scale     (Transform, Scl.Val);
-      Rotate    (Transform, Rot.Val);
-      Translate (Transform, Pos.Val);
-
-      Uniforms.Model.Set_And_Send (Transform);
-
-      Bind (Mdl.Val.Vao);
-      Bind (Array_Buffer, Mdl.Val.Vertex_Buffer);
-      Bind (Array_Buffer, Mdl.Val.Normal_Buffer);
-
-      if Mdl.Val.Materials.Length > 0 then
-         for Mtl of Mdl.Val.Materials loop
-            Draw_Arrays (
-               Mode  => Triangles,
-               First => Mtl.First_Index,
-               Count => Mtl.Num_Indices
-            );
-         end loop;
-      else -- No materials
-         Draw_Arrays (
-            Mode  => Triangles,
-            First => 0,
-            Count => Mdl.Val.Num_Vertices
-         );
-      end if;
-   end Internal_Render;
 
    -------------------------------------
    --  Internal_Calculate_Projection  --
@@ -228,11 +138,12 @@ package body Cargame.Renderer is
       return Matrix4
    is
    begin
-      return Types.Perspective_Matrix
-         (View_Angle   => Types.Degrees (Config.Vertical_FoV),
-          Aspect_Ratio => Globals.Window.Aspect_Ratio,
-          Near         => Config.Near_Plane,
-          Far          => Config.Far_Plane);
+      return Types.Perspective_Matrix (
+         View_Angle   => Types.Degrees (Config.Vertical_FoV),
+         Aspect_Ratio => Globals.Window.Aspect_Ratio,
+         Near         => Config.Near_Plane,
+         Far          => Config.Far_Plane
+      );
    end Internal_Calculate_Projection;
 
    --------------

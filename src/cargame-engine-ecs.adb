@@ -1,5 +1,6 @@
 with Cargame.Globals;  use Cargame.Globals;
 with Cargame.Types;    use Cargame.Types;
+with Cargame.Util;
 
 with GL;               use GL;
 with GL.Types;         use GL.Types;          use GL.Types.Singles;
@@ -9,9 +10,12 @@ with GL.Objects.Textures;
 
 with Glfw.Windows.Context;
 
+
 package body Cargame.Engine.ECS is
 
-   function Union (Sets : in Entity_Sets) return Entity_Set is
+   function Union (Sets : in Entity_Sets)
+      return Entity_Set
+   is
    begin
       return Ret : Entity_Set := (others => False) do
          for S of Sets loop
@@ -47,35 +51,44 @@ package body Cargame.Engine.ECS is
 
       task body Mgr is
       begin
-         Task_Loop :
-         loop
+         Task_Loop : loop
 
-            Stale_State :
-            loop
+            Stale_State : loop
                select
-                  accept Read_Stale (E : in Entity; Ret : out Option) do
-                     Ret := Data (E);
+                  accept Read_Stale (Ret : out Data_T) do
+                     Util.Log (Name & " served stale data. Awaiting update.");
+                     Ret := Data;
+                     exit Stale_State;
                   end Read_Stale;
                or
-                  accept Update (E : in Entity; New_Value : in Element_T) do
-                     Data (E) := Option'(Is_Set => True, Val => New_Value);
-                  end Update;
-               or
-                  accept Finished_Update;
+                  accept Discard_Stale_Data;
                   exit Stale_State;
                or
                   terminate;
                end select;
             end loop Stale_State;
 
-            Fresh_State :
-            loop
+            Awaiting_Update : loop
+               select
+                  accept Write_Fresh (New_Data : in Data_T) do
+                     Util.Log (Name & " received fresh data, moving to fresh state.");
+                     Data := New_Data;
+                     exit Awaiting_Update;
+                  end Write_Fresh;
+               or
+                  terminate;
+               end select;
+            end loop Awaiting_Update;
+
+            Fresh_State : loop
                select
                   accept Read_Fresh (E : in Entity; Ret : out Option) do
                      Ret := Data (E);
                   end Read_Fresh;
                or
-                  accept Next_Frame;
+                  accept Mark_Stale do
+                     Util.Log (Name & " -> Stale");
+                  end Mark_Stale;
                   exit Fresh_State;
                or
                   terminate;
@@ -110,7 +123,8 @@ package body Cargame.Engine.ECS is
       procedure Run_All_Systems is
       begin
          for Sys of Registered_Systems (1 .. Last_System_Index) loop
-            Sys.all; --  This is a procedure call.
+            Util.Log ("Running system: " & Sys.Name);
+            Sys.Kernel.all; --  This is a procedure call.
          end loop;
       end Run_All_Systems;
 

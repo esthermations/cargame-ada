@@ -37,37 +37,42 @@ package Cargame.Engine.ECS is
 
    generic
       type Element_T is private;
+      Name : String;
    package Component is
 
-      type Option is
-         record
-            Is_Set : Boolean;
-            Val    : Element_T;
-         end record;
+      type Option is record
+         Val    : Element_T;
+         Is_Set : Boolean;
+      end record;
 
-      type Data_T is array (Entity) of Option;
+      subtype Datum_T is Option; -- Yes I'm a nerd ok I use the word "datum"
+      type Data_T is array (Entity) of Datum_T;
 
       task Mgr is
          --  Stale state
 
-         entry Read_Stale (E : in Entity; Ret : out Option);
+         entry Read_Stale (Data : out Data_T);
          --  Read Stale component data, probably because you plan to use it to
          --  calculate New_Data for calling Update on this component.
 
-         entry Update (E : in Entity; New_Value : in Element_T);
-         --  Update the data in this component.
+         entry Discard_Stale_Data;
+         --  Used to exit the stale state if you don't care about the previous
+         --  values of this component.
 
-         entry Finished_Update;
-         --  Moves us out of the Stale state into the Fresh state.
+         --  Awaiting update state
+
+         entry Write_Fresh (New_Data : in Data_T);
+         --  Update the data in this component.
 
          --  Fresh state
 
-         entry Read_Fresh (E : in Entity; Ret : out Option);
+         entry Read_Fresh (Data : out Data_T);
          --  Read updated data. Will block until Updated is flagged.
 
-         entry Next_Frame;
-         --  Indicate that all systems have finished running and we're moving
-         --  on to the next frame. Moves us into the Stale state.
+         entry Mark_Stale;
+         --  Indicate that this component is due for an update. Any systems
+         --  that want fresh data from it will need to wait until a system has
+         --  used Write_Fresh on it.
       end Mgr;
 
    private
@@ -81,7 +86,10 @@ package Cargame.Engine.ECS is
    ---------------
 
    package Systems is
-      type System is access procedure;
+      type System is record
+         Kernel : access procedure;
+         Name   : String (1 .. 25);
+      end record;
       procedure Register_System (S : in System);
       procedure Run_All_Systems;
    end Systems;

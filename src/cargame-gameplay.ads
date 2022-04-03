@@ -21,7 +21,7 @@ package Cargame.Gameplay is
 
    Player : ECS.Entity;
 
-   Num_Asteroids : constant := ECS.Max_Entities - 1;
+   Num_Asteroids : constant := 5; -- ECS.Max_Entities - 1;
    Asteroids     : ECS.Entity_Array (1 .. Num_Asteroids);
 
    ----------------

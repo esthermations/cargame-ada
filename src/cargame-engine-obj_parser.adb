@@ -137,8 +137,6 @@ package body Cargame.Engine.Obj_Parser is
 
          pragma Assert (Split_Line'Length >= 1);
 
-         Util.Log (To_String (Split_Line (1)));
-
          case Obj_Token'Value (To_String (Split_Line (1))) is
             when VN => Unique_Normals.Append (Read_Vector3 (Split_Line (1 .. Split_Last)));
             when VT => Unique_TexCrds.Append (Read_Vector2 (Split_Line (1 .. Split_Last)));

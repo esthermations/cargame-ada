@@ -22,6 +22,7 @@ with Cargame.Globals;
 with Cargame.Gameplay;                        use Cargame.Gameplay;
 with Cargame.Gameplay.Systems;
 with Cargame.Gameplay.Components;
+with Cargame.Renderer.Systems;
 
 with Cargame.Types;                           use Cargame.Types;
 with Cargame.Util;
@@ -104,59 +105,93 @@ begin
    Player_Model   := Create_Model_From_Obj (Config.Player_Model_Path);
    Asteroid_Model := Create_Model_From_Obj (Config.Asteroid_Model_Path);
 
-   Player := ECS.New_Entity;
-   Components.Controlled_By_Player.Mgr.Update (Player, True);
-   Components.Position.Mgr.Update             (Player, Origin);
-   Components.Velocity.Mgr.Update             (Player, (others => 0.0));
-   Components.Acceleration.Mgr.Update         (Player, (others => 0.0));
-   Components.Render_Scale.Mgr.Update         (Player, 10.0);
-   Components.Object_Matrix.Mgr.Update        (Player, Identity4);
-   Components.CamObj_Matrix.Mgr.Update        (Player, Identity4);
-   Components.Normal_Matrix.Mgr.Update        (Player, Identity3);
-   Components.Model.Mgr.Update                (Player, Player_Model);
-   Components.Rotation.Mgr.Update             (Player, Radians (0.0));
+   declare
+      Controlled_By_Player : Components.Controlled_By_Player.Data_T;
+      Position             : Components.Position.Data_T;
+      Velocity             : Components.Velocity.Data_T;
+      Acceleration         : Components.Acceleration.Data_T;
+      Render_Scale         : Components.Render_Scale.Data_T;
+      Object_Matrix        : Components.Object_Matrix.Data_T;
+      Normal_Matrix        : Components.Normal_Matrix.Data_T;
+      Model                : Components.Model.Data_T;
+      Rotation             : Components.Rotation.Data_T;
+      Rotational_Speed     : Components.Rotational_Speed.Data_T;
+   begin
+      Components.Controlled_By_Player.Mgr.Read_Stale (Controlled_By_Player);
+      Components.Position.Mgr.Read_Stale             (Position);
+      Components.Velocity.Mgr.Read_Stale             (Velocity);
+      Components.Acceleration.Mgr.Read_Stale         (Acceleration);
+      Components.Render_Scale.Mgr.Read_Stale         (Render_Scale);
+      Components.Object_Matrix.Mgr.Read_Stale        (Object_Matrix);
+      Components.Normal_Matrix.Mgr.Read_Stale        (Normal_Matrix);
+      Components.Model.Mgr.Read_Stale                (Model);
+      Components.Rotation.Mgr.Read_Stale             (Rotation);
+      Components.Rotational_Speed.Mgr.Read_Stale     (Rotational_Speed);
 
-   for I in Asteroids'Range loop
-      Asteroids (I) := ECS.New_Entity;
+      Player := ECS.New_Entity;
+      Controlled_By_Player (Player).Val := True;
+      Position             (Player).Val := Origin;
+      Velocity             (Player).Val := (others => 0.0);
+      Acceleration         (Player).Val := (others => 0.0);
+      Render_Scale         (Player).Val := 10.0;
+      Object_Matrix        (Player).Val := Identity4;
+      Normal_Matrix        (Player).Val := Identity3;
+      Model                (Player).Val := Player_Model;
+      Rotation             (Player).Val := Radians (0.0);
 
-      --  Set position
-      declare
-         package R renames Ada.Numerics.Float_Random;
-         Position : Valid_Vector3;
-         Factor : constant Single := 50.0;
-      begin
-         Position (X) := Factor * Single (R.Random (Float_Generator) - 0.5);
-         Position (Y) := Factor * Single (R.Random (Float_Generator) - 0.5);
-         Position (Z) := Factor * Single (R.Random (Float_Generator) - 0.5);
-         Components.Position.Mgr.Update (Asteroids (I), Position);
-      end;
+      --  Set asteroids...
+      for I in Asteroids'Range loop
+         Asteroids (I) := ECS.New_Entity;
 
-      --  Set everything else
-      Components.Rotation.Mgr.Update         (Asteroids (I), Radians (0.0));
-      Components.Model.Mgr.Update            (Asteroids (I), Asteroid_Model);
-      Components.Rotational_Speed.Mgr.Update (Asteroids (I), Radians (0.01));
-      Components.Render_Scale.Mgr.Update     (Asteroids (I), 10.0);
-      Components.Object_Matrix.Mgr.Update    (Asteroids (I), Identity4);
-      Components.CamObj_Matrix.Mgr.Update    (Asteroids (I), Identity4);
-      Components.Normal_Matrix.Mgr.Update    (Asteroids (I), Identity3);
-   end loop;
+         --  Set position
+         declare
+            package R renames Ada.Numerics.Float_Random;
+            Pos    : Valid_Vector3;
+            Factor : constant Single := 50.0;
+         begin
+            Pos (X) := Factor * Single (R.Random (Float_Generator) - 0.5);
+            Pos (Y) := Factor * Single (R.Random (Float_Generator) - 0.5);
+            Pos (Z) := Factor * Single (R.Random (Float_Generator) - 0.5);
+            Position (Asteroids (I)).Val := Pos;
+         end;
+
+         --  Set everything else
+         Rotation         (Asteroids (I)).Val := Radians (0.0);
+         Model            (Asteroids (I)).Val := Asteroid_Model;
+         Rotational_Speed (Asteroids (I)).Val := Radians (0.01);
+         Render_Scale     (Asteroids (I)).Val := 10.0;
+         Object_Matrix    (Asteroids (I)).Val := Identity4;
+         Normal_Matrix    (Asteroids (I)).Val := Identity3;
+      end loop;
+
+      Components.Controlled_By_Player.Mgr.Write_Fresh (Controlled_By_Player);
+      Components.Position.Mgr.Write_Fresh             (Position);
+      Components.Velocity.Mgr.Write_Fresh             (Velocity);
+      Components.Acceleration.Mgr.Write_Fresh         (Acceleration);
+      Components.Render_Scale.Mgr.Write_Fresh         (Render_Scale);
+      Components.Object_Matrix.Mgr.Write_Fresh        (Object_Matrix);
+      Components.Normal_Matrix.Mgr.Write_Fresh        (Normal_Matrix);
+      Components.Model.Mgr.Write_Fresh                (Model);
+      Components.Rotation.Mgr.Write_Fresh             (Rotation);
+      Components.Rotational_Speed.Mgr.Write_Fresh     (Rotational_Speed);
+   end;
 
    -----------------------
    --  Set ECS Systems  --
    -----------------------
 
    declare
-      package ECS renames Cargame.Engine.ECS;
-      use Cargame.Gameplay.Systems;
+      use Cargame.Engine.ECS.Systems;
+      package G renames Cargame.Gameplay.Systems;
+      package R renames Cargame.Renderer.Systems;
    begin
-      --  NOTE: The dependency ordering of these systems is manually set here
-      --  just by arranging these function calls. Maybe we could do something
-      --  cleverer.
-      ECS.Systems.Register_System (Tick_Camera'Access);
-      ECS.Systems.Register_System (Tick_Position'Access);
-      ECS.Systems.Register_System (Tick_Rotation'Access);
-      ECS.Systems.Register_System (Tick_Object_Matrix'Access);
-      ECS.Systems.Register_System (Render'Access);
+      Register_System ((G.Tick_Camera'Access          , "Tick_Camera              "));
+      Register_System ((G.Tick_Position'Access        , "Tick_Position            "));
+      Register_System ((G.Tick_Rotation'Access        , "Tick_Rotation            "));
+      Register_System ((G.Tick_Object_Matrix'Access   , "Tick_Object_Matrix       "));
+
+      Register_System ((R.Update_Renderer_State'Access, "Update_Renderer_State    "));
+      Register_System ((R.Render'Access               , "Render                   "));
    end;
 
    ----------------------
