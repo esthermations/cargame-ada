@@ -10,7 +10,7 @@ actual engine logic itself.
 At the moment I'm working on an Entity Component System that achieves
 dependency ordering by storing its Components in thread-safe state machines
 that distinguish between "Stale" and "Fresh" states, "Fresh" meaning "having
-been this frame". (I may later have a frame-independent definition for
+been updated this frame". (I may later have a frame-independent definition for
 fresh/stale). Jobs that want fresh data will have to wait until another job has
 updated the data to the fresh state, so hopefully it all just... sorts itself
 out. That's the hope!
