@@ -2,19 +2,46 @@
 
 I'm in me mum's car! Broom broom.
 
-This is basically the same project as
-[DlangVulkanTriangle](https://github.com/esthermations/DlangVulkanTriangle)
-except it's in Ada and it uses OpenGL instead of Vulkan. It doesn't actually
-really have anything to do with cars anymore, it's basically just a game engine
-I hack away at in lieu of anything better to do, eheh. 😇
+This is a game engine written in Ada that I am perpetually re-writing to try
+stuff out. It has an OpenGL renderer that *theoretically* supports textures,
+but lately I'm mostly just placing 3D models in the scene and playing with the
+actual engine logic itself.
 
-## Building
+At the moment I'm working on an Entity Component System that achieves
+dependency ordering by storing its Components in thread-safe state machines
+that distinguish between "Stale" and "Fresh" states, "Fresh" meaning "having
+been this frame". (I may later have a frame-independent definition for
+fresh/stale). Jobs that want fresh data will have to wait until another job has
+updated the data to the fresh state, so hopefully it all just... sorts itself
+out. That's the hope!
 
-- `git clone https://github.com/esthermations/cargame-ada`
-- `git submodule update --init`
-- Build the dependencies in `dep` (probably just cd there and run `make`)
-- Run `gprbuild` in the project root
+## Architecture
 
-You may or may not need other libraries like OpenGL or GLFW etc etc. Install
-those however you normally would and chuck the library in the `obj`
-folder if the compiler/linker doesn't seem to find them.
+At time of writing, a high-level view of the project is:
+
+ - **Cargame** :
+    - Cargame.**Globals** : Global program state. I mostly try to keep
+      "application-level" state in here, more specific stuff goes in Gameplay
+      or Renderer etc.
+    - Cargame.**Engine** :
+        - ECS : The Entity Component System
+        - Obj_Parser : A Wavefront OBJ parser
+        - Models : Data types for renderable models
+    - Cargame.**Renderer** : Responsible for interfacing with OpenGL.
+        - Systems : Procedures meant to be run by the ECS
+        - Uniforms : Declarations of OpenGL uniform values
+    - Cargame.**Gameplay** : Gameplay logic lives in here. The idea is that
+      this is where I set up how the game itself actually works and plays.
+        - Systems : Procedures meant to be run by the ECS
+        - Components : Components (Per-Entity data) to be managed by the ECS
+    - Cargame.**Types** : A mess; mostly validity-checked types used for linear
+      algebra.
+    - Cargame.**Util** : Utility stuff, mostly logging and debug helpers.
+
+
+## Building & Running
+
+This project use [Alire](https://github.com/alire-project/alire) to build and
+it's all pretty straightforward. Just install that and run `alr run` in the
+root directory.
+
