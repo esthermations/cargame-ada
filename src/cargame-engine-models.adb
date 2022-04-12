@@ -24,10 +24,11 @@ package body Cargame.Engine.Models is
       return True;
    end Is_Renderable;
 
-   function Create_Model
-      (Data      : in Vertex_Data;
-       Indices   : in Int_Array;
-       Materials : in Vector_Of_Material)
+   function Create_Model (
+      Data      : in Vertex_Data;
+      Indices   : in Int_Array;
+      Materials : in Vector_Of_Material
+   )
       return Model
    is
       Vao : Vertex_Array_Object;
@@ -42,34 +43,68 @@ package body Cargame.Engine.Models is
       pragma Assert (Buf.Initialized);
 
       Bind (Array_Buffer, Buf);
-      Load_Single_Buffer
-         (Target => Array_Buffer,
-          Data   => Data.Data,
-          Usage  => Static_Draw);
+      Load_Single_Buffer (
+         Target => Array_Buffer,
+         Data   => Data.Data,
+         Usage  => Static_Draw
+      );
 
       case Data.Layout is
          when Position3_Normal3_TexCrd2 =>
-      Set_Vertex_Attrib_Pointer
-         (Index      => Vertices_Attribute,
-          Count      => Vector3'Length,
-          Kind       => Single_Type,
-          Normalized => False,
-          Stride     => 0,
-          Offset     => 0);
+            Set_Vertex_Attrib_Pointer (
+               Index      => Vertices_Attribute,
+               Count      => 3,
+               Kind       => Single_Type,
+               Normalized => False,
+               Stride     => Layout_Stride (Data.Layout),
+               Offset     => 0
+            );
 
-      Set_Vertex_Attrib_Pointer
-         (Index      => Vertices_Attribute,
-          Count      => Vector3'Length,
-          Kind       => Single_Type,
-          Normalized => False,
-          Stride     => 0,
-          Offset     => 0);
+            Set_Vertex_Attrib_Pointer (
+               Index      => Normals_Attribute,
+               Count      => 3,
+               Kind       => Single_Type,
+               Normalized => False,
+               Stride     => Layout_Stride (Data.Layout),
+               Offset     => 3
+            );
 
+            Set_Vertex_Attrib_Pointer (
+               Index      => TexCrds_Attribute,
+               Count      => 2,
+               Kind       => Single_Type,
+               Normalized => False,
+               Stride     => Layout_Stride (Data.Layout),
+               Offset     => 3 + 3
+            );
 
+            Enable_Vertex_Attrib_Array (Vertices_Attribute);
+            Enable_Vertex_Attrib_Array (Normals_Attribute);
+            Enable_Vertex_Attrib_Array (TexCrds_Attribute);
 
-      Enable_Vertex_Attrib_Array (Vertices_Attribute);
+         when Position3_Normal3 =>
+            Set_Vertex_Attrib_Pointer (
+               Index      => Vertices_Attribute,
+               Count      => 3,
+               Kind       => Single_Type,
+               Normalized => False,
+               Stride     => Layout_Stride (Data.Layout),
+               Offset     => 0
+            );
 
+            Set_Vertex_Attrib_Pointer (
+               Index      => Normals_Attribute,
+               Count      => 3,
+               Kind       => Single_Type,
+               Normalized => False,
+               Stride     => Layout_Stride (Data.Layout),
+               Offset     => 3
+            );
 
+            Enable_Vertex_Attrib_Array (Vertices_Attribute);
+            Enable_Vertex_Attrib_Array (Normals_Attribute);
+
+      end case;
 
    end Create_Model;
 
