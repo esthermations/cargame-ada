@@ -116,6 +116,7 @@ begin
       Model                : Components.Model.Data_T;
       Rotation             : Components.Rotation.Data_T;
       Rotational_Speed     : Components.Rotational_Speed.Data_T;
+      Look_At_Target       : Components.Look_At_Target.Data_T;
    begin
       Components.Controlled_By_Player.Mgr.Read_Stale (Controlled_By_Player);
       Components.Position.Mgr.Read_Stale             (Position);
@@ -127,17 +128,24 @@ begin
       Components.Model.Mgr.Read_Stale                (Model);
       Components.Rotation.Mgr.Read_Stale             (Rotation);
       Components.Rotational_Speed.Mgr.Read_Stale     (Rotational_Speed);
+      Components.Look_At_Target.Mgr.Read_Stale       (Look_At_Target);
 
       Player := ECS.New_Entity;
-      Controlled_By_Player (Player).Val := True;
-      Position             (Player).Val := Origin;
-      Velocity             (Player).Val := (others => 0.0);
-      Acceleration         (Player).Val := (others => 0.0);
-      Render_Scale         (Player).Val := 10.0;
-      Object_Matrix        (Player).Val := Identity4;
-      Normal_Matrix        (Player).Val := Identity3;
-      Model                (Player).Val := Player_Model;
-      Rotation             (Player).Val := Radians (0.0);
+      Controlled_By_Player (Player).Provide (True);
+      Position             (Player).Provide (Origin);
+      Velocity             (Player).Provide ((others => 0.0));
+      Acceleration         (Player).Provide ((others => 0.0));
+      Render_Scale         (Player).Provide (10.0);
+      Object_Matrix        (Player).Provide (Identity4);
+      Normal_Matrix        (Player).Provide (Identity3);
+      Model                (Player).Provide (Player_Model);
+      Rotation             (Player).Provide (Radians (0.0));
+
+      --  Set camera...
+      Camera := ECS.New_Entity;
+      Controlled_By_Player (Camera).Provide (False);
+      Position             (Camera).Provide (Valid_Vector3'(0.0, 0.0, -1.0));
+      Look_At_Target       (Camera).Provide (Position (Player).Val);
 
       --  Set asteroids...
       for I in Asteroids'Range loop
@@ -156,12 +164,12 @@ begin
          end;
 
          --  Set everything else
-         Rotation         (Asteroids (I)).Val := Radians (0.0);
-         Model            (Asteroids (I)).Val := Asteroid_Model;
-         Rotational_Speed (Asteroids (I)).Val := Radians (0.01);
-         Render_Scale     (Asteroids (I)).Val := 10.0;
-         Object_Matrix    (Asteroids (I)).Val := Identity4;
-         Normal_Matrix    (Asteroids (I)).Val := Identity3;
+         Rotation         (Asteroids (I)).Provide (Radians (0.0));
+         Model            (Asteroids (I)).Provide (Asteroid_Model);
+         Rotational_Speed (Asteroids (I)).Provide (Radians (0.01));
+         Render_Scale     (Asteroids (I)).Provide (10.0);
+         Object_Matrix    (Asteroids (I)).Provide (Identity4);
+         Normal_Matrix    (Asteroids (I)).Provide (Identity3);
       end loop;
 
       Components.Controlled_By_Player.Mgr.Write_Fresh (Controlled_By_Player);
@@ -174,6 +182,7 @@ begin
       Components.Model.Mgr.Write_Fresh                (Model);
       Components.Rotation.Mgr.Write_Fresh             (Rotation);
       Components.Rotational_Speed.Mgr.Write_Fresh     (Rotational_Speed);
+      Components.Look_At_Target.Mgr.Write_Fresh       (Look_At_Target);
    end;
 
    -----------------------

@@ -49,38 +49,74 @@ package body Cargame.Engine.ECS is
 
    package body Component is
 
+
+      procedure Provide (D : in out Datum_T; Initial_Value : in Element_T) is
+      begin
+         D.Val := Initial_Value;
+         D.Is_Set := True;
+         Util.Log (Name & " <- " & );
+      end Set;
+
+
+      procedure Remove (D : in out Datum_T) is
+      begin
+         D.Val := Element_T'(<>);
+         D.Is_Set := False;
+      end Clear;
+
+
       task body Mgr is
       begin
-         Task_Loop : loop
+         Task_Loop :
+         loop
 
-            Stale_State : loop
+            Declaration_State :
+            loop
+               select
+                  accept Provide (E : Entity; Initial_Value : Element_T) do
+                     Util.Log (Name & " <- " & E.Img);
+                     Data (E).Is_Set := True;
+                     Data (E).Val    := Initial_Value;
+                  end Provide;
+               or
+                  accept Remove (E : Entity) do
+                     Util.Log (Name & " removed from entity " & E.Img);
+                     Data (E).Is_Set := False;
+                     Data (E).Val    := Element_T'(<>);
+                  end Remove;
+               or
+                  exit Declaration_State;
+               end select;
+            end loop Declaration_State;
+
+            Stale_State :
+            loop
                select
                   accept Read_Stale (Ret : out Data_T) do
                      Util.Log (Name & " served stale data. Awaiting update.");
                      Ret := Data;
-                     exit Stale_State;
                   end Read_Stale;
+
+                  --  I think the lack of an "or terminate" here will cause the
+                  --  program to not exit if we quit between these two points,
+                  --  but uh... I'm not sure how else to write this.
+
+                  accept Write_Fresh (New_Data : in Data_T) do
+                     Util.Log (Name & " received fresh data, moving to fresh state.");
+                     Data := New_Data;
+                  end Write_Fresh;
+
+                  exit Stale_State;
                or
-                  accept Discard_Stale_Data;
+                  accept Mark_Stale_Data_As_Fresh;
                   exit Stale_State;
                or
                   terminate;
                end select;
             end loop Stale_State;
 
-            Awaiting_Update : loop
-               select
-                  accept Write_Fresh (New_Data : in Data_T) do
-                     Util.Log (Name & " received fresh data, moving to fresh state.");
-                     Data := New_Data;
-                     exit Awaiting_Update;
-                  end Write_Fresh;
-               or
-                  terminate;
-               end select;
-            end loop Awaiting_Update;
-
-            Fresh_State : loop
+            Fresh_State :
+            loop
                select
                   accept Read_Fresh (E : in Entity; Ret : out Option) do
                      Ret := Data (E);

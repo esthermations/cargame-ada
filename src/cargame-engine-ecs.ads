@@ -40,23 +40,35 @@ package Cargame.Engine.ECS is
       Name : String;
    package Component is
 
-      type Option is record
+      type Datum_T is tagged record
          Val    : Element_T;
          Is_Set : Boolean;
       end record;
 
-      subtype Datum_T is Option; -- Yes I'm a nerd ok I use the word "datum"
       type Data_T is array (Entity) of Datum_T;
 
       task Mgr is
+
+         --  Declaration state
+
+         entry Provide (E : Entity; Initial_Value : Element_T);
+         --  Tell the manager that this entity has this component, with the
+         --  given value.
+
+         entry Remove (E : Entity);
+         --  Tell the manager that this entity no longer has this component.
+
+         --  We move to Stale state when no more Provide/Remove entries are
+         --  pending
+
          --  Stale state
 
          entry Read_Stale (Data : out Data_T);
          --  Read Stale component data, probably because you plan to use it to
          --  calculate New_Data for calling Update on this component.
 
-         entry Discard_Stale_Data;
-         --  Used to exit the stale state if you don't care about the previous
+         entry Mark_Stale_Data_As_Fresh;
+         --  Used to exit the stale state if you're happy with the previous
          --  values of this component.
 
          --  Awaiting update state
