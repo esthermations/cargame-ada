@@ -18,11 +18,12 @@ package body Cargame.Gameplay.Systems is
 
    use Cargame.Gameplay.Components;
 
-   procedure Tick_Camera is
+   task body Tick_Camera is
       Pos             : Position.Data_T;
       Player_Position : Position.Datum_T;
    begin
-      Position.Mgr.Read_Fresh (Pos);
+      Position.Mgr.Wait_Until_Updated;
+      Pos := Position.Mgr.Get;
 
       Player_Position := Pos (Gameplay.Player);
       pragma Assert (Player_Position.Is_Set);
@@ -31,12 +32,13 @@ package body Cargame.Gameplay.Systems is
       Renderer.Camera.Set_Target   (Player_Position.Val + Config.Camera_Target_Offset);
    end Tick_Camera;
 
-   procedure Tick_Position is
-      Pos : Position.Data_T;
+
+   task body Tick_Position is
+      Pos : Position.Data_T := Position.Mgr.Get;
       Vel : Velocity.Data_T;
    begin
-      Position.Mgr.Read_Stale (E, Pos);
-      Velocity.Mgr.Read_Fresh (E, Vel);
+      Velocity.Mgr.Wait_Until_Updated;
+      Vel := Velocity.Mgr.Get;
 
       for E in Entity loop
          if Pos (E).Is_Set and Vel (E).Is_Set then
@@ -44,52 +46,53 @@ package body Cargame.Gameplay.Systems is
          end if;
       end loop;
 
-      Position.Mgr.Write_Fresh (Pos);
+      Position.Mgr.Set (Pos);
    end Tick_Position;
 
-   procedure Tick_Rotation is
-      Rot : Rotation.Data_T;
+
+   task body Tick_Rotation is
+      Rot : Rotation        .Data_T := Rotation.Mgr.Get;
       Spd : Rotational_Speed.Data_T;
    begin
-      Rotation.Mgr.Read_Stale         (Rot);
-      Rotational_Speed.Mgr.Read_Fresh (Spd);
+      Rotational_Speed.Mgr.Wait_Until_Updated;
+      Spd := Rotational_Speed.Mgr.Get;
 
-      for E in Entity loop
-         if Rot (E).Is_Set and Spd (E).Is_Set then
-            Rot (E).Val := @ + Spd (E).Val;
-         end if;
+      for E of Union (Rot.Entities, Spd.Entities) loop
+         Rot.Elements (E) := @ + Spd.Elements (E);
       end loop;
 
-      Rotation.Mgr.Write_Fresh (Rot);
+      Rotation.Mgr.Set (Rot);
    end Tick_Rotation;
 
 
-   procedure Tick_Velocity is
-      Vel : Velocity.Data_T;
+   task body Tick_Velocity is
+      Vel : Velocity    .Data_T := Velocity.Mgr.Get;
       Acc : Acceleration.Data_T;
    begin
-      Velocity.Mgr.Read_Stale (Old);
-      Acceleration.Mgr.Read_Fresh (Acc);
+      Acceleration.Wait_Until_Updated;
+      Acc := Acceleration.Mgr.Get;
 
-      for E in Vel'Range loop
-         if Vel (E).Is_Set and then Acc (E).Is_Set then
-            Vel (E).Val := @ + Acc (E).Val;
-         end if;
+      for E of Union (Vel.Entities, Acc.Entities) loop
+         Vel.Elements (E) := @ + Acc.Elements (E);
       end loop;
 
-      Velocity.Mgr.Write_Fresh (Vel);
+      Velocity.Mgr.Set (Vel);
    end Tick_Velocity;
 
 
-   procedure Tick_Object_Matrix is
+   task body Tick_Object_Matrix is
       Scl : Render_Scale.Data_T;
       Rot : Rotation.Data_T;
       Pos : Position.Data_T;
       Obj : Object_Matrix.Data_T;
    begin
-      Render_Scale.Mgr.Read_Fresh (Scl);
-      Rotation.Mgr.Read_Fresh     (Rot);
-      Position.Mgr.Read_Fresh     (Pos);
+      Render_Scale.Mgr.Wait_Until_Updated;
+      Rotation.Mgr.Wait_Until_Updated;
+      Position.Mgr.Wait_Until_Updated;
+
+      Scl := Render_Scale.Mgr.Get;
+      Rot := Rotation.Mgr.Get;
+      Pos := Position.Mgr.Get;
 
       for E in Entity loop
          if Scl (E).Is_Set and Rot (E).Is_Set and Pos (E).Is_Set then
@@ -104,8 +107,7 @@ package body Cargame.Gameplay.Systems is
          end if;
       end loop;
 
-      Object_Matrix.Mgr.Discard_Stale_Data;
-      Object_Matrix.Mgr.Write_Fresh (Obj);
+      Object_Matrix.Mgr.Set (Obj);
    end Tick_Object_Matrix;
 
 end Cargame.Gameplay.Systems;

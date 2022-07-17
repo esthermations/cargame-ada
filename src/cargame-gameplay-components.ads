@@ -13,9 +13,6 @@ package Cargame.Gameplay.Components is
    package Render_Scale         is new ECS.Component (Single             , "Render_Scale"        );
    package Object_Matrix        is new ECS.Component (Matrix4            , "Object_Matrix"       );
    package Normal_Matrix        is new ECS.Component (Matrix3            , "Normal_Matrix"       );
-
    package Look_At_Target       is new ECS.Component (Types.Valid_Vector3, "Look_At_Target"      );
-   --  Could generalise this to point any entity at any other entity? I don't
-   --  know the math for that but I could suss it
 
 end Cargame.Gameplay.Components;

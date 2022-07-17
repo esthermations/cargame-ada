@@ -106,46 +106,35 @@ begin
    Asteroid_Model := Create_Model_From_Obj (Config.Asteroid_Model_Path);
 
    declare
-      Controlled_By_Player : Components.Controlled_By_Player.Data_T;
-      Position             : Components.Position.Data_T;
-      Velocity             : Components.Velocity.Data_T;
-      Acceleration         : Components.Acceleration.Data_T;
-      Render_Scale         : Components.Render_Scale.Data_T;
-      Object_Matrix        : Components.Object_Matrix.Data_T;
-      Normal_Matrix        : Components.Normal_Matrix.Data_T;
-      Model                : Components.Model.Data_T;
-      Rotation             : Components.Rotation.Data_T;
-      Rotational_Speed     : Components.Rotational_Speed.Data_T;
-      Look_At_Target       : Components.Look_At_Target.Data_T;
-   begin
-      Components.Controlled_By_Player.Mgr.Read_Stale (Controlled_By_Player);
-      Components.Position.Mgr.Read_Stale             (Position);
-      Components.Velocity.Mgr.Read_Stale             (Velocity);
-      Components.Acceleration.Mgr.Read_Stale         (Acceleration);
-      Components.Render_Scale.Mgr.Read_Stale         (Render_Scale);
-      Components.Object_Matrix.Mgr.Read_Stale        (Object_Matrix);
-      Components.Normal_Matrix.Mgr.Read_Stale        (Normal_Matrix);
-      Components.Model.Mgr.Read_Stale                (Model);
-      Components.Rotation.Mgr.Read_Stale             (Rotation);
-      Components.Rotational_Speed.Mgr.Read_Stale     (Rotational_Speed);
-      Components.Look_At_Target.Mgr.Read_Stale       (Look_At_Target);
+      Controlled_By_Player : Components.Controlled_By_Player.Data_T := Components.Controlled_By_Player.Mgr.Get;
+      Position             : Components.Position.Data_T             := Components.Position.Mgr.Get;
+      Velocity             : Components.Velocity.Data_T             := Components.Velocity.Mgr.Get;
+      Acceleration         : Components.Acceleration.Data_T         := Components.Acceleration.Mgr.Get;
+      Render_Scale         : Components.Render_Scale.Data_T         := Components.Render_Scale.Mgr.Get;
+      Object_Matrix        : Components.Object_Matrix.Data_T        := Components.Object_Matrix.Mgr.Get;
+      Normal_Matrix        : Components.Normal_Matrix.Data_T        := Components.Normal_Matrix.Mgr.Get;
+      Model                : Components.Model.Data_T                := Components.Model.Mgr.Get;
+      Rotation             : Components.Rotation.Data_T             := Components.Rotation.Mgr.Get;
+      Rotational_Speed     : Components.Rotational_Speed.Data_T     := Components.Rotational_Speed.Mgr.Get;
+      Look_At_Target       : Components.Look_At_Target.Data_T       := Components.Look_At_Target.Mgr.Get;
 
-      Player := ECS.New_Entity;
-      Controlled_By_Player (Player).Provide (True);
-      Position             (Player).Provide (Origin);
-      Velocity             (Player).Provide ((others => 0.0));
-      Acceleration         (Player).Provide ((others => 0.0));
-      Render_Scale         (Player).Provide (10.0);
-      Object_Matrix        (Player).Provide (Identity4);
-      Normal_Matrix        (Player).Provide (Identity3);
-      Model                (Player).Provide (Player_Model);
-      Rotation             (Player).Provide (Radians (0.0));
+      Player : constant ECS.Entity := ECS.New_Entity;
+      Camera : constant ECS.Entity := ECS.New_Entity;
+   begin
+      Controlled_By_Player (Player) := True;
+      Position             (Player) := Origin;
+      Velocity             (Player) := (others => 0.0);
+      Acceleration         (Player) := (others => 0.0);
+      Render_Scale         (Player) := 10.0;
+      Object_Matrix        (Player) := Identity4;
+      Normal_Matrix        (Player) := Identity3;
+      Model                (Player) := Player_Model;
+      Rotation             (Player) := Radians (0.0);
 
       --  Set camera...
-      Camera := ECS.New_Entity;
-      Controlled_By_Player (Camera).Provide (False);
-      Position             (Camera).Provide (Valid_Vector3'(0.0, 0.0, -1.0));
-      Look_At_Target       (Camera).Provide (Position (Player).Val);
+      Controlled_By_Player (Camera) := False;
+      Position             (Camera) := Valid_Vector3'(0.0, 0.0, -1.0);
+      Look_At_Target       (Camera) := Position (Player).Val;
 
       --  Set asteroids...
       for I in Asteroids'Range loop
@@ -164,43 +153,25 @@ begin
          end;
 
          --  Set everything else
-         Rotation         (Asteroids (I)).Provide (Radians (0.0));
-         Model            (Asteroids (I)).Provide (Asteroid_Model);
-         Rotational_Speed (Asteroids (I)).Provide (Radians (0.01));
-         Render_Scale     (Asteroids (I)).Provide (10.0);
-         Object_Matrix    (Asteroids (I)).Provide (Identity4);
-         Normal_Matrix    (Asteroids (I)).Provide (Identity3);
+         Rotation         (Asteroids (I)) := Radians (0.0);
+         Model            (Asteroids (I)) := Asteroid_Model;
+         Rotational_Speed (Asteroids (I)) := Radians (0.01);
+         Render_Scale     (Asteroids (I)) := 10.0;
+         Object_Matrix    (Asteroids (I)) := Identity4;
+         Normal_Matrix    (Asteroids (I)) := Identity3;
       end loop;
 
-      Components.Controlled_By_Player.Mgr.Write_Fresh (Controlled_By_Player);
-      Components.Position.Mgr.Write_Fresh             (Position);
-      Components.Velocity.Mgr.Write_Fresh             (Velocity);
-      Components.Acceleration.Mgr.Write_Fresh         (Acceleration);
-      Components.Render_Scale.Mgr.Write_Fresh         (Render_Scale);
-      Components.Object_Matrix.Mgr.Write_Fresh        (Object_Matrix);
-      Components.Normal_Matrix.Mgr.Write_Fresh        (Normal_Matrix);
-      Components.Model.Mgr.Write_Fresh                (Model);
-      Components.Rotation.Mgr.Write_Fresh             (Rotation);
-      Components.Rotational_Speed.Mgr.Write_Fresh     (Rotational_Speed);
-      Components.Look_At_Target.Mgr.Write_Fresh       (Look_At_Target);
-   end;
-
-   -----------------------
-   --  Set ECS Systems  --
-   -----------------------
-
-   declare
-      use Cargame.Engine.ECS.Systems;
-      package G renames Cargame.Gameplay.Systems;
-      package R renames Cargame.Renderer.Systems;
-   begin
-      Register_System ((G.Tick_Camera'Access          , "Tick_Camera              "));
-      Register_System ((G.Tick_Position'Access        , "Tick_Position            "));
-      Register_System ((G.Tick_Rotation'Access        , "Tick_Rotation            "));
-      Register_System ((G.Tick_Object_Matrix'Access   , "Tick_Object_Matrix       "));
-
-      Register_System ((R.Update_Renderer_State'Access, "Update_Renderer_State    "));
-      Register_System ((R.Render'Access               , "Render                   "));
+      Components.Controlled_By_Player.Mgr.Set (Controlled_By_Player);
+      Components.Position.Mgr.Set             (Position);
+      Components.Velocity.Mgr.Set             (Velocity);
+      Components.Acceleration.Mgr.Set         (Acceleration);
+      Components.Render_Scale.Mgr.Set         (Render_Scale);
+      Components.Object_Matrix.Mgr.Set        (Object_Matrix);
+      Components.Normal_Matrix.Mgr.Set        (Normal_Matrix);
+      Components.Model.Mgr.Set                (Model);
+      Components.Rotation.Mgr.Set             (Rotation);
+      Components.Rotational_Speed.Mgr.Set     (Rotational_Speed);
+      Components.Look_At_Target.Mgr.Set       (Look_At_Target);
    end;
 
    ----------------------
@@ -226,11 +197,7 @@ begin
       --  Tick  --
       ------------
 
-      Globals.Frame_Number := @ + 1;
-
       Glfw.Input.Poll_Events;
-
-      ECS.Systems.Run_All_Systems;
 
       Renderer.Clear_Back_Buffer;
       Renderer.Render_Enqueued_Entities;
@@ -252,6 +219,7 @@ begin
       -------------
 
       delay until Next_Frame_Time;
+      Globals.Frame_Number.Increment;
 
    end loop Game_Loop;
 

@@ -1,5 +1,7 @@
 with Cargame.Config;
 
+with GNAT.Source_Info;
+
 package Cargame.Engine.ECS is
 
    --------------
@@ -38,72 +40,47 @@ package Cargame.Engine.ECS is
    generic
       type Element_T is private;
       Name : String;
-   package Component is
+   package Component
+   is
 
-      type Datum_T is tagged record
+      type Datum_T is record
          Val    : Element_T;
          Is_Set : Boolean;
       end record;
 
-      type Data_T is array (Entity) of Datum_T;
+      type Elements_T is array (Entity) of Element_T;
 
-      task Mgr is
+      type Data_T is tagged record
+         Elements : Elements_T;
+         Entities : Entity_Set;
+      end record;
 
-         --  Declaration state
+      procedure Provide (D : in out Data_T; E : in Entity; Elem : in Element_T)
+         with Post => D.Present (E) and then D.Elements (E) = Elem;
 
-         entry Provide (E : Entity; Initial_Value : Element_T);
-         --  Tell the manager that this entity has this component, with the
-         --  given value.
+      procedure Remove (D : in out Data_T; E : in Entity)
+         with Post => not D.Present (E);
 
-         entry Remove (E : Entity);
-         --  Tell the manager that this entity no longer has this component.
+      protected Mgr is
 
-         --  We move to Stale state when no more Provide/Remove entries are
-         --  pending
+         entry     Wait_Until_Updated        (Who_Are_You : String := GNAT.Source_Info.Enclosing_Entity);
 
-         --  Stale state
+         procedure Set (New_Data : in Data_T; Who_Are_You : String := GNAT.Source_Info.Enclosing_Entity);
+         function  Get return Data_T;
 
-         entry Read_Stale (Data : out Data_T);
-         --  Read Stale component data, probably because you plan to use it to
-         --  calculate New_Data for calling Update on this component.
+      private
 
-         entry Mark_Stale_Data_As_Fresh;
-         --  Used to exit the stale state if you're happy with the previous
-         --  values of this component.
+         Data        : Data_T;
+         Last_Update : Frame;
 
-         --  Awaiting update state
-
-         entry Write_Fresh (New_Data : in Data_T);
-         --  Update the data in this component.
-
-         --  Fresh state
-
-         entry Read_Fresh (Data : out Data_T);
-         --  Read updated data. Will block until Updated is flagged.
-
-         entry Mark_Stale;
-         --  Indicate that this component is due for an update. Any systems
-         --  that want fresh data from it will need to wait until a system has
-         --  used Write_Fresh on it.
       end Mgr;
-
-   private
-
-      Data : Data_T;
 
    end Component;
 
-   ---------------
-   --  Systems  --
-   ---------------
+   --------------
+   --  System  --
+   --------------
 
-   package Systems is
-      type System is record
-         Kernel : access procedure;
-         Name   : String (1 .. 25);
-      end record;
-      procedure Register_System (S : in System);
-      procedure Run_All_Systems;
-   end Systems;
+   --  Systems are implemented as tasks :)
 
 end Cargame.Engine.ECS;

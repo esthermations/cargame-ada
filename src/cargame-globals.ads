@@ -12,7 +12,8 @@ with Glfw.Windows;         use Glfw.Windows;
 --  Globals pertaining to the program, not necessarily the game logic. This
 --  package should have no dependencies on other Cargame packages.
 
-package Cargame.Globals is
+package Cargame.Globals
+is
 
    ---------------------------
    --  Fundamental Timings  --
@@ -24,7 +25,12 @@ package Cargame.Globals is
    Target_FPS      : constant Frames    := Frames (120);
    Frame_Interval  : constant Time_Span := (Seconds (1) / Target_FPS);
 
-   Frame_Number    : Frame := Frames'First;
+   protected Current_Frame is
+      entry    Increment;
+      function Get return Frame;
+   private
+      Value : Frame := 1;
+   end Current_Frame;
 
    --------------------
    --  Window state  --

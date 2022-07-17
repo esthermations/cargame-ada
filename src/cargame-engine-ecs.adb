@@ -17,15 +17,7 @@ package body Cargame.Engine.ECS is
       return Entity_Set
    is
    begin
-      return Ret : Entity_Set := (others => False) do
-         for S of Sets loop
-            for E in Entity loop
-               if S (E) then
-                  Ret (E) := True;
-               end if;
-            end loop;
-         end loop;
-      end return;
+      return [for E in Entity => (for S of Sets => S (E))];
    end Union;
 
    ------------------
@@ -34,7 +26,9 @@ package body Cargame.Engine.ECS is
 
    Next_Entity : Entity := Entity'First;
 
-   function New_Entity return Entity is
+   function New_Entity
+      return Entity
+   is
       pragma Assert (Next_Entity /= Entity'Last,
                      "Exceeded allowable number of entities.");
       Ret : constant Entity := Next_Entity;
@@ -49,89 +43,34 @@ package body Cargame.Engine.ECS is
 
    package body Component is
 
-
-      procedure Provide (D : in out Datum_T; Initial_Value : in Element_T) is
+      procedure Provide (D : in out Data_T; E : in Entity; Elem : in Element_T)
+         with Post => D.Present (E) and then D.Elements (E) = Elem
+      is
       begin
-         D.Val := Initial_Value;
-         D.Is_Set := True;
-         Util.Log (Name & " <- " & );
-      end Set;
+      end Provide;
 
+      procedure Remove (D : in out Data_T; E : in Entity)
+         with Post => not D.Present (E);
 
-      procedure Remove (D : in out Datum_T) is
-      begin
-         D.Val := Element_T'(<>);
-         D.Is_Set := False;
-      end Clear;
+      protected body Mgr is
 
+         entry Wait_Until_Updated (Who_Are_You : String := GNAT.Source_Info.Enclosing_Entity)
+            when Last_Update /= Globals.Frame_Number
+         is
+         begin
+            Util.Log (Name & ": " & Who_Are_You & " finished waiting");
+         end Wait_Until_Updated;
 
-      task body Mgr is
-      begin
-         Task_Loop :
-         loop
+         function Get return Data_T is (Data);
 
-            Declaration_State :
-            loop
-               select
-                  accept Provide (E : Entity; Initial_Value : Element_T) do
-                     Util.Log (Name & " <- " & E.Img);
-                     Data (E).Is_Set := True;
-                     Data (E).Val    := Initial_Value;
-                  end Provide;
-               or
-                  accept Remove (E : Entity) do
-                     Util.Log (Name & " removed from entity " & E.Img);
-                     Data (E).Is_Set := False;
-                     Data (E).Val    := Element_T'(<>);
-                  end Remove;
-               or
-                  exit Declaration_State;
-               end select;
-            end loop Declaration_State;
+         procedure Set (New_Data : in Data_T; Who_Are_You : String := GNAT.Source_Info.Enclosing_Entity)
+         is
+         begin
+            Util.Log (Name & ": " & Who_Are_You & " gave us new values. Now up-to-date!");
+            Data        := New_Data;
+            Last_Update := Globals.Frame_Number;
+         end Set;
 
-            Stale_State :
-            loop
-               select
-                  accept Read_Stale (Ret : out Data_T) do
-                     Util.Log (Name & " served stale data. Awaiting update.");
-                     Ret := Data;
-                  end Read_Stale;
-
-                  --  I think the lack of an "or terminate" here will cause the
-                  --  program to not exit if we quit between these two points,
-                  --  but uh... I'm not sure how else to write this.
-
-                  accept Write_Fresh (New_Data : in Data_T) do
-                     Util.Log (Name & " received fresh data, moving to fresh state.");
-                     Data := New_Data;
-                  end Write_Fresh;
-
-                  exit Stale_State;
-               or
-                  accept Mark_Stale_Data_As_Fresh;
-                  exit Stale_State;
-               or
-                  terminate;
-               end select;
-            end loop Stale_State;
-
-            Fresh_State :
-            loop
-               select
-                  accept Read_Fresh (E : in Entity; Ret : out Option) do
-                     Ret := Data (E);
-                  end Read_Fresh;
-               or
-                  accept Mark_Stale do
-                     Util.Log (Name & " -> Stale");
-                  end Mark_Stale;
-                  exit Fresh_State;
-               or
-                  terminate;
-               end select;
-            end loop Fresh_State;
-
-         end loop Task_Loop;
       end Mgr;
 
    end Component;

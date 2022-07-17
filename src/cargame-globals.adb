@@ -8,6 +8,17 @@ with Cargame.Renderer; use Cargame.Renderer;
 
 package body Cargame.Globals is
 
+   protected body Frame_Number
+   is
+
+      function Get return Frame is (Value);
+
+      entry Increment is
+         Value := @ + 1;
+      end Increment;
+
+   end Frame_Number;
+
    --------------
    --  Window  --
    --------------
