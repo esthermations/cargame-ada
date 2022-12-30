@@ -1,4 +1,7 @@
 package body Cargame.Gameplay is
+
+   procedure Init is separate;
+
    package body Controls is
       function Key_To_Action (K : in Key) return Any_Control_Action is
       begin

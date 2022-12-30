@@ -14,7 +14,7 @@ with GL.Buffers;       use GL.Buffers;
 with GL.Objects;
 with GL.Objects.Textures;
 
-package body Cargame.Gameplay.Systems is
+package body Cargame.Gameplay.Systems.Kernels is
 
    use Cargame.Gameplay.Components;
 
@@ -30,6 +30,8 @@ package body Cargame.Gameplay.Systems is
 
       Renderer.Camera.Set_Position (Player_Position.Val + Config.Camera_Position_Offset);
       Renderer.Camera.Set_Target   (Player_Position.Val + Config.Camera_Target_Offset);
+
+      Tick_Camera_Completed.Signal;
    end Tick_Camera;
 
 
@@ -110,4 +112,4 @@ package body Cargame.Gameplay.Systems is
       Object_Matrix.Mgr.Set (Obj);
    end Tick_Object_Matrix;
 
-end Cargame.Gameplay.Systems;
+end Cargame.Gameplay.Systems.Kernels;

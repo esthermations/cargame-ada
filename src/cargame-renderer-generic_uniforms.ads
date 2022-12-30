@@ -10,7 +10,7 @@ package Cargame.Renderer.Generic_Uniforms with Elaborate_Body is
    --  The idea is that we have a local copy of the value that we can modify
    --  willy-nilly via Set_Without_Sending, and call Send_to_GL when ready.
    --
-   --  The Set proc just does one after the other, for convenience.
+   --  The Set_And_Send proc just does one after the other, for convenience.
 
    generic
       Name : String;

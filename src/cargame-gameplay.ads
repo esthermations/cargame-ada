@@ -6,23 +6,36 @@ with Glfw.Input;
 with Glfw.Input.Keys;
 
 with Cargame.Types;
+with Cargame.Engine.Models;
 with Cargame.Engine.ECS;
+with Cargame.Util;
+
+use Cargame.Types;
+use GL, GL.Types, GL.Types.Singles;
 
 package Cargame.Gameplay is
 
-   use Cargame.Types;
-   use GL, GL.Types, GL.Types.Singles;
+   procedure Init;
+   --  Initialises gameplay state. Call once before the game loop.
+
+   ---------------
+   --  Entities --
+   ---------------
 
    package ECS renames Cargame.Engine.ECS;
 
-   --------------------
-   --  Game Entities --
-   --------------------
-
-   Player : ECS.Entity;
-
    Num_Asteroids : constant := 5; -- ECS.Max_Entities - 1;
    Asteroids     : ECS.Entity_Array (1 .. Num_Asteroids);
+   Player        : ECS.Entity;
+
+   -----------------------
+   --  Models (assets)  --
+   -----------------------
+
+   package Models is
+      Player   : Engine.Models.Model;
+      Asteroid : Engine.Models.Model;
+   end Models;
 
    ----------------
    --  Controls  --

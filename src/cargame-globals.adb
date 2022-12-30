@@ -10,10 +10,10 @@ package body Cargame.Globals is
 
    protected body Frame_Number
    is
-
       function Get return Frame is (Value);
 
-      entry Increment is
+      procedure Increment is
+      begin
          Value := @ + 1;
       end Increment;
 

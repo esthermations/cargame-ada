@@ -2,23 +2,24 @@ with GL.Attributes;
 with GL.Types;
 with GL.Objects.Vertex_Arrays;
 with GL.Objects.Buffers;
-
 with Cargame.Types;
 with Cargame.Vectors;
 
+use GL.Attributes;
+use GL.Types;
+use GL.Types.Singles;
+use GL.Objects.Vertex_Arrays;
+use GL.Objects.Buffers;
+use Cargame.Types;
+use Cargame.Vectors;
+
 package Cargame.Engine.Models is
 
-   use GL.Attributes;
-   use GL.Types;
-   use GL.Types.Singles;
-   use GL.Objects.Vertex_Arrays;
-   use GL.Objects.Buffers;
-   use Cargame.Types;
-   use Cargame.Vectors;
-
-   Vertices_Attribute : constant Attribute := 0;
-   Normals_Attribute  : constant Attribute := 1;
-   TexCrds_Attribute  : constant Attribute := 2;
+   package Attributes is
+      Vertices : constant Attribute := 0;
+      Normals  : constant Attribute := 1;
+      TexCrds  : constant Attribute := 2;
+   end Attributes;
 
    type Model is tagged record
       Materials     : Vector_Of_Material;
@@ -29,12 +30,9 @@ package Cargame.Engine.Models is
    end record;
 
    overriding
-   function "=" (L, R : in Model)
-      return Boolean
-      is (L.Vao = R.Vao);
+   function "=" (L, R : in Model) return Boolean is (L.Vao = R.Vao);
 
-   function Is_Renderable (M : in Model)
-      return Boolean;
+   function Is_Renderable (M : in Model) return Boolean;
 
    function Create_Model (Vertices, Normals : in Vector3_Array;
                           TexCrds           : in Vector2_Array;

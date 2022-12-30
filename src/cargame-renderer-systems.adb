@@ -32,7 +32,6 @@ package body Cargame.Renderer.Systems is
 
    end Update_Renderer_State;
 
-
    procedure Render is
       use Cargame.Gameplay.Components;
       Mdl : Model.Data_T;

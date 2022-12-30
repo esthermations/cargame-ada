@@ -53,14 +53,14 @@ package body Cargame.Engine.Models is
                            Data   => Vertices,
                            Usage  => Static_Draw);
 
-      Set_Vertex_Attrib_Pointer (Index      => Vertices_Attribute,
+      Set_Vertex_Attrib_Pointer (Index      => Attributes.Vertices,
                                  Count      => Vector3'Length,
                                  Kind       => Single_Type,
                                  Normalized => False,
                                  Stride     => 0,
                                  Offset     => 0);
 
-      Enable_Vertex_Attrib_Array (Vertices_Attribute);
+      Enable_Vertex_Attrib_Array (Attributes.Vertices);
 
       ------------------------
       -- Add normals to VAO --
@@ -74,14 +74,14 @@ package body Cargame.Engine.Models is
                            Data   => Normals,
                            Usage  => Static_Draw);
 
-      Set_Vertex_Attrib_Pointer (Index      => Normals_Attribute,
+      Set_Vertex_Attrib_Pointer (Index      => Attributes.Normals,
                                  Count      => Vector3'Length,
                                  Kind       => Single_Type,
                                  Normalized => False,
                                  Stride     => 0,
                                  Offset     => 0);
 
-      Enable_Vertex_Attrib_Array (Normals_Attribute);
+      Enable_Vertex_Attrib_Array (Attributes.Normals);
 
       ------------------------
       -- Add texcrds to VAO --
@@ -96,13 +96,13 @@ package body Cargame.Engine.Models is
                            Data   => TexCrds,
                            Usage  => Static_Draw);
 
-      Set_Vertex_Attrib_Pointer (Index      => TexCrds_Attribute,
+      Set_Vertex_Attrib_Pointer (Index      => Attributes.TexCrds,
                                  Count      => Vector2'Length,
                                  Kind       => Single_Type,
                                  Normalized => False,
                                  Stride     => 0,
                                  Offset     => 0);
-      Enable_Vertex_Attrib_Array (TexCrds_Attribute);
+      Enable_Vertex_Attrib_Array (Attributes.TexCrds);
 
       ------------------------
       -- Add indices to VAO --

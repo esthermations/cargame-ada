@@ -58,4 +58,6 @@ package Cargame.Util is
       Signalled : Boolean := False;
    end Semaphore;
 
+   type Semaphore_Array is array (Positive range <>) of Semaphore;
+
 end Cargame.Util;

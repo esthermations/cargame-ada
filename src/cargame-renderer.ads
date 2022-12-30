@@ -14,10 +14,13 @@ with Cargame.Util;
 
 package Cargame.Renderer is
 
-   procedure Init;
-   --  Initialise the renderer state so we can start rendering Entities.
+   function Initialised
+      return Boolean;
 
-   function  Initialised return Boolean;
+   procedure Init
+   --  Initialise the renderer state so we can start rendering Entities.
+      with Pre => not Initialised,
+           Post => Initialised;
 
    procedure Enqueue_For_Rendering (E : in Entity)
    --  Call this if you'd like to render the given entity with the next call to

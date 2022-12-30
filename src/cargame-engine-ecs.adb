@@ -15,10 +15,7 @@ package body Cargame.Engine.ECS is
 
    function Union (Sets : in Entity_Sets)
       return Entity_Set
-   is
-   begin
-      return [for E in Entity => (for S of Sets => S (E))];
-   end Union;
+      is ([for E in Entity => (for S of Sets => S (E))]);
 
    ------------------
    --  New_Entity  --
@@ -42,67 +39,62 @@ package body Cargame.Engine.ECS is
    -----------------
 
    package body Component is
-
-      procedure Provide (D : in out Data_T; E : in Entity; Elem : in Element_T)
-         with Post => D.Present (E) and then D.Elements (E) = Elem
-      is
-      begin
-      end Provide;
-
-      procedure Remove (D : in out Data_T; E : in Entity)
-         with Post => not D.Present (E);
-
       protected body Mgr is
 
-         entry Wait_Until_Updated (Who_Are_You : String := GNAT.Source_Info.Enclosing_Entity)
-            when Last_Update /= Globals.Frame_Number
-         is
-         begin
-            Util.Log (Name & ": " & Who_Are_You & " finished waiting");
-         end Wait_Until_Updated;
+         <<Component_Loop>> loop
 
-         function Get return Data_T is (Data);
+            accept Lock (Who_Are_You : String := GNAT.Source_Info.Enclosing_Entity)
+               when not Locked
+            do
+               Util.Log ("Component ", Name, " locked by ", Who_Are_You);
+               Locked := True;
+            end Lock;
 
-         procedure Set (New_Data : in Data_T; Who_Are_You : String := GNAT.Source_Info.Enclosing_Entity)
-         is
-         begin
-            Util.Log (Name & ": " & Who_Are_You & " gave us new values. Now up-to-date!");
-            Data        := New_Data;
-            Last_Update := Globals.Frame_Number;
-         end Set;
+            <<Locked_Loop>> loop
+               --  Allow access while locked
 
+               select
+                  accept Read (D : out Data_T)
+                     when Locked
+                  do
+                     D := Data;
+                  end Get;
+               or
+                  accept Write (D : in Data_T)
+                     when Locked
+                  do
+                     Data := D;
+                  end Set;
+               or
+                  accept Unlock (Who_Are_You : String := GNAT.Source_Info.Enclosing_Entity)
+                     when Locked
+                  do
+                     Util.Log ("Component ", Name, " released by ", Who_Are_You);
+                     Locked := False;
+                     exit Locked_Loop;
+                  end Unlock;
+               or
+                  terminate;
+               end select;
+            end loop Locked_Loop;
+         end loop Component_Loop;
       end Mgr;
-
    end Component;
 
    ---------------
    --  Systems  --
    ---------------
 
-   package body Systems is
-
-      type Array_Of_System
-         is array (Positive range 1 .. Config.Max_Systems)
-         of System;
-
-      Registered_Systems : Array_Of_System;
-      Last_System_Index  : Positive := Registered_Systems'First;
-
-      procedure Register_System (S : in System) is
+   package body System is
+      task body Kernel_Runner is
       begin
-         pragma Assert (Last_System_Index <= Config.Max_Systems);
-         Registered_Systems (Last_System_Index) := S;
-         Last_System_Index := @ + 1;
-      end Register_System;
-
-      procedure Run_All_Systems is
-      begin
-         for Sys of Registered_Systems (1 .. Last_System_Index) loop
-            Util.Log ("Running system: " & Sys.Name);
-            Sys.Kernel.all; --  This is a procedure call.
+         for Sem of After loop
+            Sem.Wait;
          end loop;
-      end Run_All_Systems;
 
-   end Systems;
+         Kernel;
+         Done.Signal;
+      end Kernel_Runner;
+   end System;
 
 end Cargame.Engine.ECS;

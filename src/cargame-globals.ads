@@ -25,12 +25,12 @@ is
    Target_FPS      : constant Frames    := Frames (120);
    Frame_Interval  : constant Time_Span := (Seconds (1) / Target_FPS);
 
-   protected Current_Frame is
-      entry    Increment;
+   protected Frame_Number is
+      procedure Increment;
       function Get return Frame;
    private
       Value : Frame := 1;
-   end Current_Frame;
+   end Frame_Number;
 
    --------------------
    --  Window state  --

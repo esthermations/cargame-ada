@@ -2,12 +2,9 @@ with Ada.Containers; use Ada.Containers;
 
 with GL.Objects.Programs; use GL.Objects.Programs;
 with GL.Objects.Shaders;
-with GL.Objects.Vertex_Arrays;
-with GL.Objects.Buffers;
 with GL.Buffers;
 with GL.Files;
 with GL.Toggles;
-with GL.Window;
 
 with Glfw.Windows.Context;
 
@@ -39,6 +36,11 @@ package body Cargame.Renderer is
    function Initialised
       return Boolean
       is (Program.Initialized);
+
+   procedure Enqueue_For_Rendering (E: Entity) is
+   begin
+      Render_Queue (E) := True;
+   end Enqueue_For_Rendering;
 
    ------------
    --  Init  --
@@ -137,14 +139,12 @@ package body Cargame.Renderer is
    function Internal_Calculate_Projection
       return Matrix4
    is
-   begin
-      return Types.Perspective_Matrix (
+      (Types.Perspective_Matrix (
          View_Angle   => Types.Degrees (Config.Vertical_FoV),
          Aspect_Ratio => Globals.Window.Aspect_Ratio,
          Near         => Config.Near_Plane,
          Far          => Config.Far_Plane
-      );
-   end Internal_Calculate_Projection;
+      ));
 
    --------------
    --  Camera  --
